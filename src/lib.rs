@@ -2,3 +2,4 @@
 #![deny(unsafe_code)]
 
 pub mod arena;
+pub mod collections;

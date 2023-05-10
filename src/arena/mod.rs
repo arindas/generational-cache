@@ -2,7 +2,10 @@
 
 pub mod vector;
 
-use core::marker::PhantomData;
+use core::{
+    fmt::{self, Display},
+    marker::PhantomData,
+};
 use vector::Vector;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -35,6 +38,18 @@ pub struct Arena<V, T> {
     _phantom_type: PhantomData<T>,
 }
 
+#[derive(PartialEq, Debug)]
+pub enum ArenaError {
+    OutOfMemory,
+    InvalidIdx,
+}
+
+impl Display for ArenaError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{self:?}")
+    }
+}
+
 impl<V, T> Arena<V, T>
 where
     V: Vector<Entry<T>>,
@@ -61,8 +76,8 @@ where
         }
     }
 
-    pub fn insert(&mut self, item: T) -> Result<Index, ()> {
-        let old_free = self.free_list_head.ok_or(())?;
+    pub fn insert(&mut self, item: T) -> Result<Index, ArenaError> {
+        let old_free = self.free_list_head.ok_or(ArenaError::OutOfMemory)?;
 
         self.free_list_head = self
             .entries_vec
@@ -71,14 +86,17 @@ where
                 Entry::Free { next_free_idx } => *next_free_idx,
                 _ => None,
             })
-            .ok_or(())?;
+            .ok_or(ArenaError::InvalidIdx)?;
 
         let entry = Entry::Occupied {
             value: item,
             generation: self.generation,
         };
 
-        *self.entries_vec.get_mut(old_free).ok_or(())? = entry;
+        *self
+            .entries_vec
+            .get_mut(old_free)
+            .ok_or(ArenaError::InvalidIdx)? = entry;
         self.generation += 1;
 
         self.len += 1;
@@ -130,7 +148,7 @@ where
         }
     }
 
-    pub fn get(&mut self, index: &Index) -> Option<&T> {
+    pub fn get(&self, index: &Index) -> Option<&T> {
         match self.entries_vec.get(index.idx) {
             Some(Entry::Occupied { value, generation }) if &index.generation == generation => {
                 Some(value)
@@ -141,6 +159,10 @@ where
 
     pub fn capacity(&self) -> usize {
         self.entries_vec.capacity()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
     }
 
     pub fn len(&self) -> usize {
