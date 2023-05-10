@@ -9,7 +9,6 @@ pub struct Link {
     pub index: Index,
 }
 
-#[allow(unused)]
 pub struct Node<T> {
     pub value: T,
 
@@ -17,7 +16,6 @@ pub struct Node<T> {
     pub prev: Option<Link>,
 }
 
-#[allow(unused)]
 pub struct LinkedList<V, T> {
     backing_arena: Arena<V, Node<T>>,
 
@@ -25,12 +23,6 @@ pub struct LinkedList<V, T> {
     tail: Option<Link>,
 
     len: usize,
-}
-
-#[allow(unused)]
-pub struct Iter<'a, V, T> {
-    list: &'a LinkedList<V, T>,
-    current: Option<Link>,
 }
 
 #[derive(PartialEq, Debug)]
@@ -46,7 +38,6 @@ impl Display for ListError {
     }
 }
 
-#[allow(unused)]
 impl<V, T> LinkedList<V, T>
 where
     V: Vector<Entry<Node<T>>>,
@@ -76,7 +67,7 @@ where
         self.len() == self.capacity()
     }
 
-    fn get_mut_node(&mut self, link: &Link) -> Option<&mut Node<T>> {
+    fn get_node_mut(&mut self, link: &Link) -> Option<&mut Node<T>> {
         self.backing_arena.get_mut(&link.index)
     }
 
@@ -85,7 +76,7 @@ where
     }
 
     pub fn get_mut(&mut self, link: &Link) -> Option<&mut T> {
-        Some(&mut self.get_mut_node(link)?.value)
+        Some(&mut self.get_node_mut(link)?.value)
     }
 
     pub fn get(&self, link: &Link) -> Option<&T> {
@@ -94,7 +85,7 @@ where
 
     fn link_head(&mut self, link: Link) -> Option<()> {
         if let Some(head_link) = self.head {
-            self.get_mut_node(&head_link)?.prev = Some(link);
+            self.get_node_mut(&head_link)?.prev = Some(link);
         } else {
             self.tail = Some(link);
         }
@@ -108,7 +99,7 @@ where
 
     fn link_tail(&mut self, link: Link) -> Option<()> {
         if let Some(tail_link) = self.tail {
-            self.get_mut_node(&tail_link)?.next = Some(link);
+            self.get_node_mut(&tail_link)?.next = Some(link);
         } else {
             self.head = Some(link);
         }
@@ -171,7 +162,7 @@ where
         self.head = self.get_node(&head_link)?.next;
 
         let to_unlink = match self.head {
-            Some(new_head_link) => &mut self.get_mut_node(&new_head_link)?.prev,
+            Some(new_head_link) => &mut self.get_node_mut(&new_head_link)?.prev,
             None => &mut self.tail,
         };
 
@@ -187,7 +178,7 @@ where
         self.tail = self.get_node(&tail_link)?.prev;
 
         let to_unlink = match self.tail {
-            Some(new_tail_link) => &mut self.get_mut_node(&new_tail_link)?.next,
+            Some(new_tail_link) => &mut self.get_node_mut(&new_tail_link)?.next,
             None => &mut self.head,
         };
 
@@ -208,8 +199,8 @@ where
                 let prev_link = node.prev?;
                 let next_link = node.next?;
 
-                self.get_mut_node(&prev_link)?.next = Some(next_link);
-                self.get_mut_node(&next_link)?.prev = Some(prev_link);
+                self.get_node_mut(&prev_link)?.next = Some(next_link);
+                self.get_node_mut(&next_link)?.prev = Some(prev_link);
 
                 self.len -= 1;
 
@@ -242,6 +233,13 @@ where
         let link = self.unlink(link)?;
         self.link_tail(link)
     }
+
+    pub fn iter(&self) -> Iter<'_, V, T> {
+        Iter {
+            list: self,
+            current: self.head,
+        }
+    }
 }
 
 impl<V, T> Default for LinkedList<V, T>
@@ -250,5 +248,37 @@ where
 {
     fn default() -> Self {
         Self::with_vector(Default::default())
+    }
+}
+
+pub struct Iter<'a, V, T> {
+    list: &'a LinkedList<V, T>,
+    current: Option<Link>,
+}
+
+impl<'a, V, T> Iterator for Iter<'a, V, T>
+where
+    V: Vector<Entry<Node<T>>>,
+{
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.list.get_node(self.current.as_ref()?).map(|node| {
+            self.current = node.next;
+            &node.value
+        })
+    }
+}
+
+impl<'a, V, T> IntoIterator for &'a LinkedList<V, T>
+where
+    V: Vector<Entry<Node<T>>>,
+{
+    type Item = &'a T;
+
+    type IntoIter = Iter<'a, V, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
     }
 }
