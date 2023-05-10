@@ -9,6 +9,7 @@ pub struct Link {
     pub index: Index,
 }
 
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Node<T> {
     pub value: T,
 
@@ -280,5 +281,49 @@ where
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
+    }
+}
+
+pub(crate) mod tests {
+    use super::{
+        super::super::{
+            arena::{vector::Vector, ArenaError, Entry},
+            collections::list::ListError,
+        },
+        LinkedList, Node,
+    };
+    use core::fmt::Debug;
+
+    pub(crate) fn _test_list_invariants<T, V, VP>(test_capacity: usize, vector_provider: VP)
+    where
+        V: Vector<Entry<Node<T>>>,
+        VP: Fn(usize) -> V,
+        T: Default + Debug + PartialEq,
+    {
+        let mut list = LinkedList::with_vector(vector_provider(test_capacity));
+
+        assert!(list.is_empty());
+
+        assert_eq!(list.peek_front(), None);
+        assert_eq!(list.peek_back(), None);
+
+        for _ in 0..test_capacity {
+            list.push_back(T::default()).unwrap();
+        }
+
+        assert!(list.is_full());
+
+        assert_eq!(list.peek_front(), Some(&T::default()));
+        assert_eq!(list.peek_back(), Some(&T::default()));
+
+        assert_eq!(
+            list.push_back(T::default()),
+            Err(ListError::ArenaError(ArenaError::OutOfMemory))
+        );
+
+        assert_eq!(
+            list.push_back(T::default()),
+            Err(ListError::ArenaError(ArenaError::OutOfMemory))
+        );
     }
 }

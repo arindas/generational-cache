@@ -63,7 +63,13 @@ pub mod arena_buffer {
 
 #[cfg(test)]
 mod tests {
-    use super::{super::super::super::tests, arena_buffer::Array};
+    use super::{
+        super::super::super::{
+            super::collections::list::{self, Node},
+            tests,
+        },
+        arena_buffer::Array,
+    };
 
     const TEST_CAPACITY: usize = 1 << 4;
 
@@ -80,5 +86,12 @@ mod tests {
     #[test]
     fn test_array_arena_remove() {
         tests::_test_arena_remove(TEST_CAPACITY, |_| Array::<i32, TEST_CAPACITY>::new());
+    }
+
+    #[test]
+    fn test_array_list_invariants() {
+        list::tests::_test_list_invariants(TEST_CAPACITY, |_| {
+            Array::<Node<()>, TEST_CAPACITY>::new()
+        });
     }
 }
