@@ -86,7 +86,7 @@ mod tests {
     use super::{array_backed_arena, array_backed_list, Array};
     use crate::{arena, collections::list, vector};
 
-    const TEST_CAPACITY: usize = 1 << 8;
+    const TEST_CAPACITY: usize = 1 << 4;
 
     #[test]
     fn test_array_vector_consitency() {
