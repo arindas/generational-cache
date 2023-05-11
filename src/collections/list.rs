@@ -365,4 +365,84 @@ pub(crate) mod tests {
 
         assert!(list.is_empty());
     }
+
+    pub(crate) fn _test_front_push_peek_pop_consistency<V>(mut list: LinkedList<V, i32>)
+    where
+        V: Vector<Entry<Node<i32>>>,
+    {
+        list.clear();
+
+        let capacity = list.capacity();
+
+        assert!(list.is_empty());
+        assert_eq!(list.peek_front(), None);
+        assert_eq!(list.pop_front(), None);
+
+        for ele in 0..capacity {
+            list.push_front(ele as i32).unwrap();
+        }
+
+        assert_eq!(
+            list.push_front(0),
+            Err(ListError::ArenaError(ArenaError::OutOfMemory))
+        );
+
+        assert_eq!(list.peek_front().unwrap(), &(capacity as i32 - 1));
+
+        let mut i = capacity as i32 - 1;
+        for ele in &list {
+            assert_eq!(ele, &i);
+            i -= 1;
+        }
+        assert_eq!(i, -1);
+
+        let mut i = capacity as i32 - 1;
+        while let Some(ele) = list.pop_front() {
+            assert_eq!(ele, i);
+            i -= 1;
+        }
+        assert_eq!(i, -1);
+
+        assert!(list.is_empty());
+    }
+
+    pub(crate) fn _test_back_push_peek_pop_consistency<V>(mut list: LinkedList<V, i32>)
+    where
+        V: Vector<Entry<Node<i32>>>,
+    {
+        list.clear();
+
+        let capacity = list.capacity();
+
+        assert!(list.is_empty());
+        assert_eq!(list.peek_back(), None);
+        assert_eq!(list.pop_back(), None);
+
+        for ele in 0..capacity {
+            list.push_back(ele as i32).unwrap();
+        }
+
+        assert_eq!(
+            list.push_back(0),
+            Err(ListError::ArenaError(ArenaError::OutOfMemory))
+        );
+
+        assert_eq!(list.peek_back().unwrap(), &(capacity as i32 - 1));
+
+        let mut i = 0;
+        for ele in &list {
+            assert_eq!(ele, &i);
+            i += 1;
+        }
+        assert_eq!(i as usize, capacity);
+
+        let mut i = capacity as i32 - 1;
+        while let Some(ele) = list.pop_back() {
+            assert_eq!(ele, i);
+            i -= 1;
+        }
+        assert_eq!(i, -1);
+
+        assert!(list.is_empty());
+    }
 }
