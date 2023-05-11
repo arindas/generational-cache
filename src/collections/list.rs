@@ -340,6 +340,14 @@ pub(crate) mod tests {
 
         assert!(list.is_full());
 
+        let mut i = 0;
+        for t in &list {
+            assert_eq!(t, &T::default());
+            i += 1;
+        }
+
+        assert_eq!(i, list.len());
+
         assert_eq!(list.peek_front(), Some(&T::default()));
         assert_eq!(list.peek_back(), Some(&T::default()));
 
@@ -352,5 +360,9 @@ pub(crate) mod tests {
             list.push_back(T::default()),
             Err(ListError::ArenaError(ArenaError::OutOfMemory))
         );
+
+        list.clear();
+
+        assert!(list.is_empty());
     }
 }
