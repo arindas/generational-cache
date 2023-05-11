@@ -263,7 +263,7 @@ where
     pub fn iter(&self) -> Iter<'_, V, T> {
         Iter {
             list: self,
-            current: self.head,
+            cursor: self.head,
         }
     }
 }
@@ -279,7 +279,7 @@ where
 
 pub struct Iter<'a, V, T> {
     list: &'a LinkedList<V, T>,
-    current: Option<Link>,
+    cursor: Option<Link>,
 }
 
 impl<'a, V, T> Iterator for Iter<'a, V, T>
@@ -289,8 +289,8 @@ where
     type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.list.get_node(self.current.as_ref()?).map(|node| {
-            self.current = node.next;
+        self.list.get_node(self.cursor.as_ref()?).map(|node| {
+            self.cursor = node.next;
             &node.value
         })
     }
