@@ -115,13 +115,27 @@ mod tests {
 
     #[test]
     fn test_array_list_front_push_peek_pop_consistency() {
-        list::tests::_test_front_push_peek_pop_consistency(
-            array_backed_list::<i32, TEST_CAPACITY>(),
-        );
+        list::tests::_test_list_front_push_peek_pop_consistency(array_backed_list::<
+            i32,
+            TEST_CAPACITY,
+        >());
     }
 
     #[test]
     fn test_array_list_back_push_peek_pop_consistency() {
-        list::tests::_test_back_push_peek_pop_consistency(array_backed_list::<i32, TEST_CAPACITY>());
+        list::tests::_test_list_back_push_peek_pop_consistency(array_backed_list::<
+            i32,
+            TEST_CAPACITY,
+        >());
+    }
+
+    #[test]
+    fn test_array_list_remove() {
+        list::tests::_test_list_remove(array_backed_list::<i32, TEST_CAPACITY>());
+    }
+
+    #[test]
+    fn test_array_list_shift_push() {
+        list::tests::_test_list_shift_push(array_backed_list::<i32, TEST_CAPACITY>());
     }
 }

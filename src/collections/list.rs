@@ -20,6 +20,16 @@ pub struct Node<T> {
     pub prev: Option<Link>,
 }
 
+impl<T> Node<T> {
+    pub fn with_value(value: T) -> Self {
+        Self {
+            value,
+            next: None,
+            prev: None,
+        }
+    }
+}
+
 impl<T> Default for Node<T>
 where
     T: Default,
@@ -110,6 +120,8 @@ where
     }
 
     fn link_head(&mut self, link: Link) -> Option<()> {
+        self.get_node_mut(&link)?.next = self.head;
+
         if let Some(head_link) = self.head {
             self.get_node_mut(&head_link)?.prev = Some(link);
         } else {
@@ -124,6 +136,8 @@ where
     }
 
     fn link_tail(&mut self, link: Link) -> Option<()> {
+        self.get_node_mut(&link)?.prev = self.tail;
+
         if let Some(tail_link) = self.tail {
             self.get_node_mut(&tail_link)?.next = Some(link);
         } else {
@@ -138,15 +152,9 @@ where
     }
 
     pub fn push_front(&mut self, value: T) -> Result<Link, ListError> {
-        let node = Node {
-            value,
-            next: self.head,
-            prev: None,
-        };
-
         let node_index = self
             .backing_arena
-            .insert(node)
+            .insert(Node::with_value(value))
             .map_err(ListError::ArenaError)?;
 
         let node_link = Link { index: node_index };
@@ -157,15 +165,9 @@ where
     }
 
     pub fn push_back(&mut self, value: T) -> Result<Link, ListError> {
-        let node = Node {
-            value,
-            next: None,
-            prev: self.tail,
-        };
-
         let node_index = self
             .backing_arena
-            .insert(node)
+            .insert(Node::with_value(value))
             .map_err(ListError::ArenaError)?;
 
         let node_link = Link { index: node_index };
@@ -220,10 +222,13 @@ where
             link if link == self.head.as_ref() => self.unlink_head(),
             link if link == self.tail.as_ref() => self.unlink_tail(),
             _ => {
-                let node = self.get_node(link)?;
+                let node = self.get_node_mut(link)?;
 
                 let prev_link = node.prev?;
                 let next_link = node.next?;
+
+                node.next = None;
+                node.prev = None;
 
                 self.get_node_mut(&prev_link)?.next = Some(next_link);
                 self.get_node_mut(&next_link)?.prev = Some(prev_link);
@@ -235,19 +240,24 @@ where
         }
     }
 
-    pub fn remove(&mut self, link: &Link) -> Option<T> {
+    fn reclaim(&mut self, link: &Link) -> Option<T> {
         let node = self.backing_arena.remove(&link.index)?;
         Some(node.value)
     }
 
+    pub fn remove(&mut self, link: &Link) -> Option<T> {
+        let link = self.unlink(link)?;
+        self.reclaim(&link)
+    }
+
     pub fn pop_front(&mut self) -> Option<T> {
         let link = self.unlink_head()?;
-        self.remove(&link)
+        self.reclaim(&link)
     }
 
     pub fn pop_back(&mut self) -> Option<T> {
         let link = self.unlink_tail()?;
-        self.remove(&link)
+        self.reclaim(&link)
     }
 
     pub fn shift_push_front(&mut self, link: &Link) -> Option<()> {
@@ -263,7 +273,7 @@ where
     pub fn iter(&self) -> Iter<'_, V, T> {
         Iter {
             list: self,
-            cursor: self.head,
+            cursor: self.head.as_ref(),
         }
     }
 }
@@ -279,20 +289,22 @@ where
 
 pub struct Iter<'a, V, T> {
     list: &'a LinkedList<V, T>,
-    cursor: Option<Link>,
+    cursor: Option<&'a Link>,
 }
 
 impl<'a, V, T> Iterator for Iter<'a, V, T>
 where
     V: Vector<Entry<Node<T>>>,
 {
-    type Item = &'a T;
+    type Item = (&'a Link, &'a T);
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.list.get_node(self.cursor.as_ref()?).map(|node| {
-            self.cursor = node.next;
-            &node.value
-        })
+        let cursor = self.cursor.take()?;
+        let cursor_node = self.list.get_node(cursor)?;
+
+        self.cursor = cursor_node.next.as_ref();
+
+        Some((cursor, &cursor_node.value))
     }
 }
 
@@ -300,7 +312,7 @@ impl<'a, V, T> IntoIterator for &'a LinkedList<V, T>
 where
     V: Vector<Entry<Node<T>>>,
 {
-    type Item = &'a T;
+    type Item = (&'a Link, &'a T);
 
     type IntoIter = Iter<'a, V, T>;
 
@@ -341,7 +353,7 @@ pub(crate) mod tests {
         assert!(list.is_full());
 
         let mut i = 0;
-        for t in &list {
+        for (_, t) in &list {
             assert_eq!(t, &T::default());
             i += 1;
         }
@@ -366,7 +378,7 @@ pub(crate) mod tests {
         assert!(list.is_empty());
     }
 
-    pub(crate) fn _test_front_push_peek_pop_consistency<V>(mut list: LinkedList<V, i32>)
+    pub(crate) fn _test_list_front_push_peek_pop_consistency<V>(mut list: LinkedList<V, i32>)
     where
         V: Vector<Entry<Node<i32>>>,
     {
@@ -390,7 +402,7 @@ pub(crate) mod tests {
         assert_eq!(list.peek_front().unwrap(), &(capacity as i32 - 1));
 
         let mut i = capacity as i32 - 1;
-        for ele in &list {
+        for (_, ele) in &list {
             assert_eq!(ele, &i);
             i -= 1;
         }
@@ -406,7 +418,7 @@ pub(crate) mod tests {
         assert!(list.is_empty());
     }
 
-    pub(crate) fn _test_back_push_peek_pop_consistency<V>(mut list: LinkedList<V, i32>)
+    pub(crate) fn _test_list_back_push_peek_pop_consistency<V>(mut list: LinkedList<V, i32>)
     where
         V: Vector<Entry<Node<i32>>>,
     {
@@ -430,7 +442,7 @@ pub(crate) mod tests {
         assert_eq!(list.peek_back().unwrap(), &(capacity as i32 - 1));
 
         let mut i = 0;
-        for ele in &list {
+        for (_, ele) in &list {
             assert_eq!(ele, &i);
             i += 1;
         }
@@ -444,5 +456,106 @@ pub(crate) mod tests {
         assert_eq!(i, -1);
 
         assert!(list.is_empty());
+    }
+
+    pub(crate) fn _test_list_remove<V>(mut list: LinkedList<V, i32>)
+    where
+        V: Vector<Entry<Node<i32>>>,
+    {
+        let capacity = list.capacity();
+
+        assert!(capacity >= 3, "Test not valid for lists with capacity < 3 ");
+
+        list.clear();
+        assert!(list.is_empty());
+
+        for ele in 0..capacity {
+            list.push_back(ele as i32).unwrap();
+        }
+
+        let link = *list.iter().find(|&(_, value)| value & 1 == 1).unwrap().0;
+
+        list.remove(&link).unwrap();
+
+        assert!(list.remove(&link).is_none());
+
+        assert!(list.get(&link).is_none());
+
+        assert_eq!(list.len(), list.capacity() - 1);
+
+        for (_, ele) in &list {
+            assert_ne!(ele, &1);
+        }
+
+        let link = *list.iter().find(|&(_, value)| value & 1 == 0).unwrap().0;
+
+        list.remove(&link).unwrap();
+
+        assert_eq!(list.peek_front(), Some(&2));
+
+        assert_eq!(list.len(), list.capacity() - 2);
+
+        let mut link = None;
+
+        for (l, _) in &list {
+            link = Some(l);
+        }
+
+        let link = *link.unwrap();
+
+        list.remove(&link).unwrap();
+
+        assert_eq!(list.len(), list.capacity() - 3);
+    }
+
+    pub(crate) fn _test_list_shift_push<V>(mut list: LinkedList<V, i32>)
+    where
+        V: Vector<Entry<Node<i32>>>,
+    {
+        let capacity = list.capacity();
+
+        assert!(capacity >= 3, "Test not valid for lists with capacity < 3 ");
+
+        list.clear();
+        assert!(list.is_empty());
+
+        for ele in 0..capacity {
+            list.push_back(ele as i32).unwrap();
+        }
+
+        assert_eq!(list.peek_front(), Some(&0));
+
+        let link = *list.iter().find(|&(_, value)| value & 1 == 1).unwrap().0;
+
+        assert_eq!(list.len(), list.capacity());
+
+        list.shift_push_front(&link).unwrap();
+
+        assert_eq!(list.len(), list.capacity());
+
+        assert_eq!(list.peek_front(), Some(&1));
+
+        for (i, j) in list
+            .iter()
+            .take(3)
+            .map(|(_, value)| value)
+            .zip([1, 0, 2].iter())
+        {
+            assert_eq!(i, j);
+        }
+
+        let link = *list.iter().find(|&(_, value)| value & 1 == 0).unwrap().0;
+
+        assert_eq!(list.get(&link), Some(&0));
+
+        assert_ne!(list.peek_back(), Some(&0));
+
+        assert_eq!(list.len(), list.capacity());
+
+        list.shift_push_back(&link).unwrap();
+
+        assert_eq!(list.peek_back(), Some(&0));
+
+        assert_eq!(list.len(), list.capacity());
     }
 }
