@@ -1,12 +1,10 @@
 //! Module providing abstractions for a generational arena implemenation.
 
-pub mod vector;
-
+use crate::vector::Vector;
 use core::{
     fmt::{self, Display},
     marker::PhantomData,
 };
-use vector::Vector;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Index {
@@ -27,7 +25,6 @@ impl<T> Default for Entry<T> {
     }
 }
 
-#[allow(unused)]
 pub struct Arena<V, T> {
     entries_vec: V,
     generation: u64,
@@ -54,8 +51,14 @@ impl<V, T> Arena<V, T>
 where
     V: Vector<Entry<T>>,
 {
-    pub fn with_vector(mut vector: V) -> Self {
-        let capacity = vector.capacity();
+    pub fn clear(&mut self) {
+        self.free_list_head = Some(0);
+        self.generation = 0;
+        self.len = 0;
+
+        self.entries_vec.clear();
+
+        let capacity = self.entries_vec.capacity();
 
         for i in 0..capacity {
             let next_free_idx = i + 1;
@@ -64,16 +67,24 @@ where
             } else {
                 None
             };
-            vector.push(Entry::Free { next_free_idx });
-        }
 
-        Self {
+            let free_entry = Entry::Free { next_free_idx };
+            self.entries_vec.push(free_entry);
+        }
+    }
+
+    pub fn with_vector(vector: V) -> Self {
+        let mut arena = Self {
             entries_vec: vector,
             generation: 0,
             free_list_head: Some(0),
             len: 0,
             _phantom_type: PhantomData,
-        }
+        };
+
+        arena.clear();
+
+        arena
     }
 
     pub fn insert(&mut self, item: T) -> Result<Index, ArenaError> {
@@ -174,22 +185,21 @@ pub(crate) mod tests {
     use super::{Arena, Entry, Index, Vector};
     use core::{cmp::PartialEq, fmt::Debug};
 
-    pub(crate) fn _test_arena_free_entries_init<T, V, VP>(test_capacity: usize, vec_provider: VP)
+    pub(crate) fn _test_arena_free_entries_init<T, V>(mut arena: Arena<V, T>)
     where
         V: Vector<Entry<T>>,
-        VP: Fn(usize) -> V,
         T: Debug + PartialEq,
     {
-        let arena = Arena::with_vector(vec_provider(test_capacity));
-
-        assert_eq!(arena.capacity(), test_capacity);
+        arena.clear();
 
         assert_eq!(arena.free_list_head, Some(0));
 
-        for i in 0..test_capacity {
+        let capacity = arena.capacity();
+
+        for i in 0..capacity {
             let entry = &arena.entries_vec[i];
 
-            if i == test_capacity - 1 {
+            if i == capacity - 1 {
                 assert_eq!(
                     entry,
                     &Entry::Free {
@@ -207,17 +217,16 @@ pub(crate) mod tests {
         }
     }
 
-    pub(crate) fn _test_arena_insert<V, VP>(test_capacity: usize, vec_provider: VP)
+    pub(crate) fn _test_arena_insert<V>(mut arena: Arena<V, i32>)
     where
         V: Vector<Entry<i32>>,
-        VP: Fn(usize) -> V,
     {
         assert!(
-            test_capacity >= 2,
+            arena.capacity() >= 2,
             "Test not valid for arena with capacity < 2"
         );
 
-        let mut arena = Arena::with_vector(vec_provider(test_capacity));
+        arena.clear();
 
         let index_0 = arena.insert(0);
         assert_eq!(
@@ -276,19 +285,22 @@ pub(crate) mod tests {
                 })
             )
         }
+
+        arena.clear();
+
+        assert!(arena.is_empty());
     }
 
-    pub(crate) fn _test_arena_remove<V, VP>(test_capacity: usize, vec_provider: VP)
+    pub(crate) fn _test_arena_remove<V>(mut arena: Arena<V, i32>)
     where
         V: Vector<Entry<i32>>,
-        VP: Fn(usize) -> V,
     {
         assert!(
-            test_capacity >= 2,
+            arena.capacity() >= 2,
             "Test not valid for arena with capacity < 2"
         );
 
-        let mut arena = Arena::with_vector(vec_provider(test_capacity));
+        arena.clear();
 
         assert_eq!(arena.free_list_head.unwrap(), 0);
 
@@ -366,5 +378,9 @@ pub(crate) mod tests {
         }
 
         assert_eq!(removed_count, free_position_count);
+
+        arena.clear();
+
+        assert!(arena.is_empty());
     }
 }

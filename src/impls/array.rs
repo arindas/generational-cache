@@ -1,6 +1,12 @@
-use super::super::Vector;
-use core::marker::Copy;
-use core::ops::{Deref, DerefMut};
+use crate::{
+    arena::{Arena, Entry},
+    collections::list::{LinkedList, Node},
+    vector::Vector,
+};
+use core::{
+    marker::Copy,
+    ops::{Deref, DerefMut},
+};
 
 pub struct Array<T, const N: usize> {
     buffer: [T; N],
@@ -54,44 +60,56 @@ impl<T, const N: usize> Vector<T> for Array<T, N> {
         self.buffer[self.len] = item;
         self.len += 1;
     }
+
+    fn clear(&mut self) {
+        self.len = 0;
+    }
 }
 
-pub mod arena_buffer {
-    use crate::arena::Entry;
-    pub type Array<T, const N: usize> = super::Array<Entry<T>, N>;
+pub fn array_backed_arena<T, const N: usize>() -> Arena<Array<Entry<T>, N>, T>
+where
+    T: Copy + Default,
+{
+    Arena::with_vector(Array::<Entry<T>, N>::new())
+}
+
+pub fn array_backed_list<T, const N: usize>() -> LinkedList<Array<Entry<Node<T>>, N>, T>
+where
+    T: Copy + Default,
+{
+    LinkedList::with_backing_arena(array_backed_arena())
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        super::super::super::{
-            super::collections::list::{self, Node},
-            tests,
-        },
-        arena_buffer::Array,
-    };
+
+    use super::{array_backed_arena, array_backed_list, Array};
+    use crate::{arena, collections::list, vector};
 
     const TEST_CAPACITY: usize = 1 << 4;
 
     #[test]
+    fn test_array_vector_consitency() {
+        vector::tests::_test_vector_consistency(Array::<usize, TEST_CAPACITY>::new());
+    }
+
+    #[test]
     fn test_array_arena_free_entries_init() {
-        tests::_test_arena_free_entries_init(TEST_CAPACITY, |_| Array::<(), TEST_CAPACITY>::new());
+        arena::tests::_test_arena_free_entries_init(array_backed_arena::<(), TEST_CAPACITY>());
     }
 
     #[test]
     fn test_array_arena_insert() {
-        tests::_test_arena_insert(TEST_CAPACITY, |_| Array::<i32, TEST_CAPACITY>::new());
+        arena::tests::_test_arena_insert(array_backed_arena::<i32, TEST_CAPACITY>());
     }
 
     #[test]
     fn test_array_arena_remove() {
-        tests::_test_arena_remove(TEST_CAPACITY, |_| Array::<i32, TEST_CAPACITY>::new());
+        arena::tests::_test_arena_remove(array_backed_arena::<i32, TEST_CAPACITY>());
     }
 
     #[test]
     fn test_array_list_invariants() {
-        list::tests::_test_list_invariants(TEST_CAPACITY, |_| {
-            Array::<Node<()>, TEST_CAPACITY>::new()
-        });
+        list::tests::_test_list_invariants(array_backed_list::<(), TEST_CAPACITY>());
     }
 }

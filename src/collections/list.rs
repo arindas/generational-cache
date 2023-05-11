@@ -2,7 +2,10 @@
 
 use core::fmt::{self, Display};
 
-use crate::arena::{vector::Vector, Arena, ArenaError, Entry, Index};
+use crate::{
+    arena::{Arena, ArenaError, Entry, Index},
+    vector::Vector,
+};
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Link {
@@ -15,6 +18,19 @@ pub struct Node<T> {
 
     pub next: Option<Link>,
     pub prev: Option<Link>,
+}
+
+impl<T> Default for Node<T>
+where
+    T: Default,
+{
+    fn default() -> Self {
+        Self {
+            value: Default::default(),
+            next: Default::default(),
+            prev: Default::default(),
+        }
+    }
 }
 
 pub struct LinkedList<V, T> {
@@ -43,13 +59,22 @@ impl<V, T> LinkedList<V, T>
 where
     V: Vector<Entry<Node<T>>>,
 {
-    pub fn with_vector(vector: V) -> Self {
+    pub fn with_backing_arena(mut arena: Arena<V, Node<T>>) -> Self {
+        arena.clear();
+
         Self {
-            backing_arena: Arena::with_vector(vector),
+            backing_arena: arena,
             head: None,
             tail: None,
             len: 0,
         }
+    }
+
+    pub fn clear(&mut self) {
+        self.backing_arena.clear();
+        self.head = None;
+        self.tail = None;
+        self.len = 0;
     }
 
     pub fn capacity(&self) -> usize {
@@ -248,7 +273,7 @@ where
     V: Default + Vector<Entry<Node<T>>>,
 {
     fn default() -> Self {
-        Self::with_vector(Default::default())
+        Self::with_backing_arena(Arena::with_vector(V::default()))
     }
 }
 
@@ -287,27 +312,29 @@ where
 pub(crate) mod tests {
     use super::{
         super::super::{
-            arena::{vector::Vector, ArenaError, Entry},
+            arena::{ArenaError, Entry},
             collections::list::ListError,
+            vector::Vector,
         },
         LinkedList, Node,
     };
     use core::fmt::Debug;
 
-    pub(crate) fn _test_list_invariants<T, V, VP>(test_capacity: usize, vector_provider: VP)
+    pub(crate) fn _test_list_invariants<T, V>(mut list: LinkedList<V, T>)
     where
         V: Vector<Entry<Node<T>>>,
-        VP: Fn(usize) -> V,
-        T: Default + Debug + PartialEq,
+        T: Debug + PartialEq + Default,
     {
-        let mut list = LinkedList::with_vector(vector_provider(test_capacity));
+        list.clear();
+
+        let capacity = list.capacity();
 
         assert!(list.is_empty());
 
         assert_eq!(list.peek_front(), None);
         assert_eq!(list.peek_back(), None);
 
-        for _ in 0..test_capacity {
+        for _ in 0..capacity {
             list.push_back(T::default()).unwrap();
         }
 
