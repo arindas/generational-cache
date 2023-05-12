@@ -8,10 +8,13 @@ pub trait Vector<T>: DerefMut<Target = [T]> {
     fn clear(&mut self);
 }
 
-pub(crate) mod tests {
+pub mod impls;
+
+#[doc(hidden)]
+pub mod tests {
     use super::Vector;
 
-    pub(crate) fn _test_vector_consistency<V: Vector<usize>>(mut vector: V) {
+    pub fn _test_vector_consistency<V: Vector<usize>>(mut vector: V) {
         vector.clear();
 
         assert!(vector.is_empty());

@@ -321,7 +321,8 @@ where
     }
 }
 
-pub(crate) mod tests {
+#[doc(hidden)]
+pub mod tests {
     use super::{
         super::super::{
             arena::{ArenaError, Entry},
@@ -332,7 +333,7 @@ pub(crate) mod tests {
     };
     use core::fmt::Debug;
 
-    pub(crate) fn _test_list_invariants<T, V>(mut list: LinkedList<V, T>)
+    pub fn _test_list_invariants<T, V>(mut list: LinkedList<V, T>)
     where
         V: Vector<Entry<Node<T>>>,
         T: Debug + PartialEq + Default,
@@ -378,7 +379,7 @@ pub(crate) mod tests {
         assert!(list.is_empty());
     }
 
-    pub(crate) fn _test_list_front_push_peek_pop_consistency<V>(mut list: LinkedList<V, i32>)
+    pub fn _test_list_front_push_peek_pop_consistency<V>(mut list: LinkedList<V, i32>)
     where
         V: Vector<Entry<Node<i32>>>,
     {
@@ -418,7 +419,7 @@ pub(crate) mod tests {
         assert!(list.is_empty());
     }
 
-    pub(crate) fn _test_list_back_push_peek_pop_consistency<V>(mut list: LinkedList<V, i32>)
+    pub fn _test_list_back_push_peek_pop_consistency<V>(mut list: LinkedList<V, i32>)
     where
         V: Vector<Entry<Node<i32>>>,
     {
@@ -458,7 +459,7 @@ pub(crate) mod tests {
         assert!(list.is_empty());
     }
 
-    pub(crate) fn _test_list_remove<V>(mut list: LinkedList<V, i32>)
+    pub fn _test_list_remove<V>(mut list: LinkedList<V, i32>)
     where
         V: Vector<Entry<Node<i32>>>,
     {
@@ -508,7 +509,7 @@ pub(crate) mod tests {
         assert_eq!(list.len(), list.capacity() - 3);
     }
 
-    pub(crate) fn _test_list_shift_push<V>(mut list: LinkedList<V, i32>)
+    pub fn _test_list_shift_push<V>(mut list: LinkedList<V, i32>)
     where
         V: Vector<Entry<Node<i32>>>,
     {

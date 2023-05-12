@@ -181,11 +181,12 @@ where
     }
 }
 
-pub(crate) mod tests {
+#[doc(hidden)]
+pub mod tests {
     use super::{Arena, Entry, Index, Vector};
     use core::{cmp::PartialEq, fmt::Debug};
 
-    pub(crate) fn _test_arena_free_entries_init<T, V>(mut arena: Arena<V, T>)
+    pub fn _test_arena_free_entries_init<T, V>(mut arena: Arena<V, T>)
     where
         V: Vector<Entry<T>>,
         T: Debug + PartialEq,
@@ -217,7 +218,7 @@ pub(crate) mod tests {
         }
     }
 
-    pub(crate) fn _test_arena_insert<V>(mut arena: Arena<V, i32>)
+    pub fn _test_arena_insert<V>(mut arena: Arena<V, i32>)
     where
         V: Vector<Entry<i32>>,
     {
@@ -291,7 +292,7 @@ pub(crate) mod tests {
         assert!(arena.is_empty());
     }
 
-    pub(crate) fn _test_arena_remove<V>(mut arena: Arena<V, i32>)
+    pub fn _test_arena_remove<V>(mut arena: Arena<V, i32>)
     where
         V: Vector<Entry<i32>>,
     {
