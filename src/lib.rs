@@ -4,4 +4,5 @@
 pub mod arena;
 pub mod cache;
 pub mod collections;
+pub mod map;
 pub mod vector;

@@ -1,7 +1,8 @@
 use super::Cache;
 use crate::{
     arena::Entry,
-    collections::list::{LinkedList, ListError, Node},
+    collections::list::{Link, LinkedList, ListError, Node},
+    map::Map,
     vector::Vector,
 };
 
@@ -16,18 +17,24 @@ pub struct Block<K, T> {
 type BlockList<V, K, T> = LinkedList<V, Block<K, T>>;
 
 #[allow(unused)]
-pub struct LRUCache<V, K, T> {
+pub struct LRUCache<V, K, T, M> {
     block_list: BlockList<V, K, T>,
+    block_refs: M,
 }
 
-impl<V, K, T> LRUCache<V, K, T>
+impl<V, K, T, M> LRUCache<V, K, T, M>
 where
     V: Vector<Entry<Node<Block<K, T>>>>,
+    M: Map<K, Link>,
 {
-    pub fn with_backing_block_list(mut block_list: BlockList<V, K, T>) -> Self {
+    pub fn with_block_list_and_refs(mut block_list: BlockList<V, K, T>, mut block_refs: M) -> Self {
         block_list.clear();
+        block_refs.clear();
 
-        Self { block_list }
+        Self {
+            block_list,
+            block_refs,
+        }
     }
 }
 
@@ -38,10 +45,10 @@ pub enum CacheError {
 }
 
 #[allow(unused)]
-impl<V, K, T> Cache<K, T> for LRUCache<V, K, T>
+impl<V, K, T, M> Cache<K, T> for LRUCache<V, K, T, M>
 where
     V: Vector<Entry<Node<Block<K, T>>>>,
-    K: PartialEq + Eq,
+    M: Map<K, Link>,
 {
     type Error = CacheError;
 
@@ -66,6 +73,10 @@ where
     }
 
     fn is_empty(&self) -> bool {
+        todo!()
+    }
+
+    fn clear(&mut self) {
         todo!()
     }
 }

@@ -12,6 +12,8 @@ pub trait Cache<K, V> {
     fn len(&self) -> usize;
 
     fn is_empty(&self) -> bool;
+
+    fn clear(&mut self);
 }
 
 pub mod lru_cache;
