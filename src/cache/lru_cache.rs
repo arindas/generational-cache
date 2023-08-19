@@ -1,4 +1,4 @@
-use super::{Cache, Evict};
+use super::{Cache, Eviction};
 use crate::{
     arena::Entry,
     collections::list::{Link, LinkedList, ListError, Node},
@@ -58,7 +58,7 @@ where
 {
     type Error = CacheError;
 
-    fn insert(&mut self, key: K, value: T) -> Result<Evict<K, T>, Self::Error> {
+    fn insert(&mut self, key: K, value: T) -> Result<Eviction<K, T>, Self::Error> {
         if let Some(link) = self.block_refs.get(&key) {
             self.block_list
                 .shift_push_back(link)
@@ -69,10 +69,10 @@ where
                 .get_mut(link)
                 .ok_or(CacheError::MapListInconsistent)?;
 
-            return Ok(Evict::Value(mem::replace(&mut block.value, value)));
+            return Ok(Eviction::Value(mem::replace(&mut block.value, value)));
         }
 
-        let evict = if self.is_maxed() {
+        let eviction = if self.is_maxed() {
             let Block { key, value } = self
                 .block_list
                 .pop_front()
@@ -80,9 +80,9 @@ where
 
             self.block_refs.remove(&key);
 
-            Evict::Block { key, value }
+            Eviction::Block { key, value }
         } else {
-            Evict::None
+            Eviction::None
         };
 
         let link = self
@@ -92,7 +92,7 @@ where
 
         self.block_refs.insert(key, link);
 
-        Ok(evict)
+        Ok(eviction)
     }
 
     fn remove(&mut self, key: &K) -> Result<T, Self::Error> {
