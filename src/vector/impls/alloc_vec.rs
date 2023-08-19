@@ -4,7 +4,7 @@ use crate::{
     arena::{Arena, Entry},
     cache::lru_cache::{Block, LRUCache},
     collections::list::{Link, LinkedList, Node},
-    map::impls::allocbtreemap::AllocBTreeMap,
+    map::impls::alloc_btree_map::AllocBTreeMap,
     vector::Vector,
 };
 use alloc::vec::Vec;

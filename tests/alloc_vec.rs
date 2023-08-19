@@ -1,7 +1,7 @@
 use generational_cache::{
     arena::{self, Arena, Entry},
     collections::list::{self, LinkedList, Node},
-    vector::{self, impls::allocvec::AllocVec},
+    vector::{self, impls::alloc_vec::AllocVec},
 };
 
 const TEST_CAPACITY: usize = 1 << 4;

@@ -1,2 +1,2 @@
-pub mod allocvec;
+pub mod alloc_vec;
 pub mod array;

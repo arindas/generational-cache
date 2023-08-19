@@ -1,4 +1,4 @@
-use generational_cache::map::{self, impls::allocbtreemap::AllocBTreeMap};
+use generational_cache::map::{self, impls::alloc_btree_map::AllocBTreeMap};
 
 #[test]
 fn test_allocbtreemap_consistency() {
