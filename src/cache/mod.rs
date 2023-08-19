@@ -11,7 +11,13 @@ pub trait Cache<K, V> {
 
     fn len(&self) -> usize;
 
-    fn is_empty(&self) -> bool;
+    fn is_maxed(&self) -> bool {
+        self.len() == self.capacity()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 
     fn clear(&mut self);
 }
