@@ -4,9 +4,14 @@ use crate::vector::Vector;
 use alloc::vec::Vec;
 use core::ops::{Deref, DerefMut};
 
-#[allow(unused)]
 pub struct AllocVec<T> {
     vec: Vec<T>,
+}
+
+impl<T> Default for AllocVec<T> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<T> AllocVec<T> {
