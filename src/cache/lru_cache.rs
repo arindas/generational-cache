@@ -9,15 +9,14 @@ use core::mem;
 
 extern crate alloc;
 
-#[allow(unused)]
+#[derive(Clone, Copy)]
 pub struct Block<K, T> {
     pub key: K,
     pub value: T,
 }
 
-type BlockList<V, K, T> = LinkedList<V, Block<K, T>>;
+pub type BlockList<V, K, T> = LinkedList<V, Block<K, T>>;
 
-#[allow(unused)]
 pub struct LRUCache<V, K, T, M> {
     block_list: BlockList<V, K, T>,
     block_refs: M,

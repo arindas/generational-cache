@@ -1,6 +1,12 @@
 extern crate alloc;
 
-use crate::vector::Vector;
+use crate::{
+    arena::{Arena, Entry},
+    cache::lru_cache::{Block, LRUCache},
+    collections::list::{Link, LinkedList, Node},
+    map::impls::allocbtreemap::AllocBTreeMap,
+    vector::Vector,
+};
 use alloc::vec::Vec;
 use core::ops::{Deref, DerefMut};
 
@@ -51,5 +57,42 @@ impl<T> Vector<T> for AllocVec<T> {
 
     fn clear(&mut self) {
         self.vec.clear()
+    }
+}
+
+pub type AllocLinkedList<T> = LinkedList<AllocLinkedListArenaVec<T>, T>;
+pub type AllocLinkedListArenaVec<T> = AllocVec<Entry<Node<T>>>;
+
+pub type AllocLinkedListAllocBTreeLRUCache<K, T> =
+    LRUCache<AllocLinkedListArenaVec<Block<K, T>>, K, T, AllocBTreeMap<K, Link>>;
+
+pub struct AllocLinkedListBTreeLRUCache<K, T> {
+    cache: AllocLinkedListAllocBTreeLRUCache<K, T>,
+}
+
+impl<K: Ord, T> AllocLinkedListBTreeLRUCache<K, T> {
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            cache: AllocLinkedListAllocBTreeLRUCache::with_block_list_and_block_refs(
+                AllocLinkedList::with_backing_arena(Arena::with_vector(
+                    AllocLinkedListArenaVec::with_capacity(capacity),
+                )),
+                AllocBTreeMap::new(),
+            ),
+        }
+    }
+}
+
+impl<K, T> DerefMut for AllocLinkedListBTreeLRUCache<K, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.cache
+    }
+}
+
+impl<K, T> Deref for AllocLinkedListBTreeLRUCache<K, T> {
+    type Target = AllocLinkedListAllocBTreeLRUCache<K, T>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.cache
     }
 }
