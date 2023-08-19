@@ -1,10 +1,11 @@
-use super::Cache;
+use super::{Cache, Evict};
 use crate::{
     arena::Entry,
     collections::list::{Link, LinkedList, ListError, Node},
     map::Map,
     vector::Vector,
 };
+use core::mem;
 
 extern crate alloc;
 
@@ -58,7 +59,7 @@ where
 {
     type Error = CacheError;
 
-    fn insert(&mut self, key: K, value: T) -> Result<(), Self::Error> {
+    fn insert(&mut self, key: K, value: T) -> Result<Evict<K, T>, Self::Error> {
         if let Some(link) = self.block_refs.get(&key) {
             self.block_list
                 .shift_push_back(link)
@@ -69,19 +70,21 @@ where
                 .get_mut(link)
                 .ok_or(CacheError::MapListInconsistent)?;
 
-            block.value = value;
-
-            return Ok(());
+            return Ok(Evict::Value(mem::replace(&mut block.value, value)));
         }
 
-        if self.is_maxed() {
-            let block = self
+        let evict = if self.is_maxed() {
+            let Block { key, value } = self
                 .block_list
                 .pop_front()
                 .ok_or(CacheError::ListUnderflow)?;
 
-            self.block_refs.remove(&block.key);
-        }
+            self.block_refs.remove(&key);
+
+            Evict::Block { key, value }
+        } else {
+            Evict::None
+        };
 
         let link = self
             .block_list
@@ -90,7 +93,7 @@ where
 
         self.block_refs.insert(key, link);
 
-        Ok(())
+        Ok(evict)
     }
 
     fn remove(&mut self, key: &K) -> Result<T, Self::Error> {
