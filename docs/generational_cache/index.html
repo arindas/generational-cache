@@ -8,27 +8,31 @@
   <a href="https://codecov.io/gh/arindas/generational-cache"> 
     <img src="https://codecov.io/gh/arindas/generational-cache/branch/main/graph/badge.svg?token=44d8cAmnlE"/> 
   </a>
+  <a href="https://crates.io/crates/generational-cache">
+  <img src="https://img.shields.io/crates/v/generational-cache" />
+  </a>
   <a href="https://github.com/arindas/generational-cache/actions/workflows/rustdoc.yml">
     <img src="https://github.com/arindas/generational-cache/actions/workflows/rustdoc.yml/badge.svg">
   </a>
 </p>
 <p align="center">
-A lib crate providing generational-arena backed cache impls. in 100% safe, [no_std] compatible Rust.
+Generational Arena based cache impls. in 100% safe, [no_std] compatible Rust.
 </p>
 <h3 id="usage"><a href="#usage">Usage</a></h3>
 <p><code>generational-cache</code> is a library crate. You may include it in your <code>Cargo.toml</code> as follows:</p>
 <div class="example-wrap"><pre class="language-toml"><code>[dependencies]
-generational-cache = &quot;https://github.com/arindas/generational-cache&quot;
+generational-cache = &quot;0.1.0&quot;
 </code></pre></div>
 <p>Refer to <a href="https://arindas.github.io/generational-cache/docs/generational_cache/">API Documentation</a> for more details.</p>
-<h4 id="examples"><a href="#examples">Examples</a></h4>
+<h4 id="examples"><a href="#examples">Examples</a></h4><h5 id="1-generational-arena-based-lru-cache-implementation"><a href="#1-generational-arena-based-lru-cache-implementation"><code>#1</code>: Generational arena based LRU cache implementation</a></h5>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[no_std]
 
 </span><span class="kw">use </span>generational_cache::prelude::<span class="kw-2">*</span>;
 
 <span class="kw">const </span>CAPACITY: usize = <span class="number">3</span>;
 
-<span class="kw">let </span><span class="kw-2">mut </span>cache = LRUCache::&lt;<span class="kw">_</span>, i32, u64, AllocBTreeMap&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;::with_backing_vector(Array::&lt;<span class="kw">_</span>, CAPACITY&gt;::new());
+<span class="comment">// users can choose between different map and vector implementations
+</span><span class="kw">let </span><span class="kw-2">mut </span>cache = LRUCache::&lt;<span class="kw">_</span>, i32, u64, AllocBTreeMap&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;::with_backing_vector(Array::&lt;<span class="kw">_</span>, CAPACITY&gt;::new());
 
 cache.insert(-<span class="number">1</span>, <span class="number">1</span>).unwrap();
 cache.insert(-<span class="number">2</span>, <span class="number">2</span>).unwrap();
@@ -77,6 +81,7 @@ cache.insert(-<span class="number">3</span>, <span class="number">3</span>).unwr
     <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;Wrong error on list underflow.&quot;</span>),
 };
 </code></pre></div>
+<p>(… we plan on adding more cache implementations in the future).</p>
 <h3 id="license"><a href="#license">License</a></h3>
 <p>This repository is licensed under the MIT License. See <a href="./LICENSE">LICENSE</a> for more details.</p>
 </div></details><h2 id="modules" class="small-section-header"><a href="#modules">Modules</a></h2><ul class="item-table"><li><div class="item-name"><a class="mod" href="arena/index.html" title="mod generational_cache::arena">arena</a></div><div class="desc docblock-short">Module providing abstractions for a generational arena implemenation.</div></li><li><div class="item-name"><a class="mod" href="cache/index.html" title="mod generational_cache::cache">cache</a></div><div class="desc docblock-short">Module providing abstractions to represent caches.</div></li><li><div class="item-name"><a class="mod" href="collections/index.html" title="mod generational_cache::collections">collections</a></div><div class="desc docblock-short">Module providing generic collections used by this crate.</div></li><li><div class="item-name"><a class="mod" href="map/index.html" title="mod generational_cache::map">map</a></div><div class="desc docblock-short">Module providing abstractions to implement maps.</div></li><li><div class="item-name"><a class="mod" href="prelude/index.html" title="mod generational_cache::prelude">prelude</a></div></li><li><div class="item-name"><a class="mod" href="vector/index.html" title="mod generational_cache::vector">vector</a></div><div class="desc docblock-short">Module providing abstractions for reperesenting vectors.</div></li></ul></section></div></main></body></html>
