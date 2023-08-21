@@ -59,6 +59,8 @@ pub mod tests {
         assert_eq!(map.insert(0, num_entries).unwrap(), Some(1));
         assert_eq!(map.get(&0), Some(&num_entries));
 
+        assert_eq!(map.len(), num_entries);
+
         if let Some(capacity) = map.capacity() {
             assert_eq!(capacity, map.len());
         }

@@ -34,6 +34,18 @@ pub mod tests {
             assert_eq!(i, &j);
         }
 
+        let cap_0 = vector.capacity();
+
+        let res = vector.push(42);
+
+        let cap_1 = vector.capacity();
+
+        if cap_0 == cap_1 {
+            assert!(res.is_err());
+        } else {
+            assert!(res.is_ok());
+        }
+
         vector.clear();
 
         assert!(vector.is_empty());
