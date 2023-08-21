@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Array"]};
+window.SIDEBAR_ITEMS = {"enum":["ArrayError"],"struct":["Array"]};

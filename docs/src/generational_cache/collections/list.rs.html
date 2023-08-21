@@ -563,9 +563,11 @@
 <a href="#563" id="563">563</a>
 <a href="#564" id="564">564</a>
 <a href="#565" id="565">565</a>
+<a href="#566" id="566">566</a>
+<a href="#567" id="567">567</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Module providing abstractions for a linked list implementation.
 
-</span><span class="kw">use </span>core::fmt::{<span class="self">self</span>, Display};
+</span><span class="kw">use </span>core::fmt::{<span class="self">self</span>, Debug, Display};
 
 <span class="kw">use crate</span>::{
     arena::{Arena, ArenaError, Entry, Index},
@@ -620,14 +622,17 @@
     len: usize,
 }
 
-<span class="attr">#[derive(PartialEq, Debug)]
-</span><span class="kw">pub enum </span>ListError {
-    ArenaError(ArenaError),
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">pub enum </span>ListError&lt;VE&gt; {
+    ArenaError(ArenaError&lt;VE&gt;),
     LinkBroken,
     ListEmpty,
 }
 
-<span class="kw">impl </span>Display <span class="kw">for </span>ListError {
+<span class="kw">impl</span>&lt;VE&gt; Display <span class="kw">for </span>ListError&lt;VE&gt;
+<span class="kw">where
+    </span>VE: Debug,
+{
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
         <span class="macro">write!</span>(f, <span class="string">&quot;{self:?}&quot;</span>)
     }
@@ -648,11 +653,14 @@
         }
     }
 
-    <span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.backing_arena.clear();
+    <span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), ListError&lt;V::Error&gt;&gt; {
+        <span class="self">self</span>.backing_arena.clear().map_err(ListError::ArenaError)<span class="question-mark">?</span>;
+
         <span class="self">self</span>.head = <span class="prelude-val">None</span>;
         <span class="self">self</span>.tail = <span class="prelude-val">None</span>;
         <span class="self">self</span>.len = <span class="number">0</span>;
+
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">pub fn </span>capacity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
@@ -665,10 +673,6 @@
 
     <span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.head.is_none()
-    }
-
-    <span class="kw">pub fn </span>is_full(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.len() == <span class="self">self</span>.capacity()
     }
 
     <span class="kw">fn </span>get_node_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, link: <span class="kw-2">&amp;</span>Link) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>Node&lt;T&gt;&gt; {
@@ -719,7 +723,7 @@
         <span class="prelude-val">Some</span>(())
     }
 
-    <span class="kw">pub fn </span>push_front(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: T) -&gt; <span class="prelude-ty">Result</span>&lt;Link, ListError&gt; {
+    <span class="kw">pub fn </span>push_front(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: T) -&gt; <span class="prelude-ty">Result</span>&lt;Link, ListError&lt;V::Error&gt;&gt; {
         <span class="kw">let </span>node_index = <span class="self">self
             </span>.backing_arena
             .insert(Node::with_value(value))
@@ -732,7 +736,7 @@
         <span class="prelude-val">Ok</span>(node_link)
     }
 
-    <span class="kw">pub fn </span>push_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: T) -&gt; <span class="prelude-ty">Result</span>&lt;Link, ListError&gt; {
+    <span class="kw">pub fn </span>push_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: T) -&gt; <span class="prelude-ty">Result</span>&lt;Link, ListError&lt;V::Error&gt;&gt; {
         <span class="kw">let </span>node_index = <span class="self">self
             </span>.backing_arena
             .insert(Node::with_value(value))
@@ -906,7 +910,7 @@
         </span>V: Vector&lt;Entry&lt;Node&lt;T&gt;&gt;&gt;,
         T: Debug + PartialEq + Default,
     {
-        list.clear();
+        list.clear().unwrap();
 
         <span class="kw">let </span>capacity = list.capacity();
 
@@ -919,7 +923,7 @@
             list.push_back(T::default()).unwrap();
         }
 
-        <span class="macro">assert!</span>(list.is_full());
+        <span class="macro">assert!</span>(list.len() == list.capacity());
 
         <span class="kw">let </span><span class="kw-2">mut </span>i = <span class="number">0</span>;
         <span class="kw">for </span>(<span class="kw">_</span>, t) <span class="kw">in </span><span class="kw-2">&amp;</span>list {
@@ -932,17 +936,17 @@
         <span class="macro">assert_eq!</span>(list.peek_front(), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>T::default()));
         <span class="macro">assert_eq!</span>(list.peek_back(), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>T::default()));
 
-        <span class="macro">assert_eq!</span>(
-            list.push_back(T::default()),
-            <span class="prelude-val">Err</span>(ListError::ArenaError(ArenaError::OutOfMemory))
-        );
+        <span class="kw">match </span>list.push_front(T::default()) {
+            <span class="prelude-val">Err</span>(ListError::ArenaError(ArenaError::OutOfMemory)) =&gt; {}
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;Out of memory not triggered&quot;</span>),
+        };
 
-        <span class="macro">assert_eq!</span>(
-            list.push_back(T::default()),
-            <span class="prelude-val">Err</span>(ListError::ArenaError(ArenaError::OutOfMemory))
-        );
+        <span class="kw">match </span>list.push_back(T::default()) {
+            <span class="prelude-val">Err</span>(ListError::ArenaError(ArenaError::OutOfMemory)) =&gt; {}
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;Out of memory not triggered&quot;</span>),
+        };
 
-        list.clear();
+        list.clear().unwrap();
 
         <span class="macro">assert!</span>(list.is_empty());
     }
@@ -951,7 +955,7 @@
     <span class="kw">where
         </span>V: Vector&lt;Entry&lt;Node&lt;i32&gt;&gt;&gt;,
     {
-        list.clear();
+        list.clear().unwrap();
 
         <span class="kw">let </span>capacity = list.capacity();
 
@@ -963,10 +967,10 @@
             list.push_front(ele <span class="kw">as </span>i32).unwrap();
         }
 
-        <span class="macro">assert_eq!</span>(
-            list.push_front(<span class="number">0</span>),
-            <span class="prelude-val">Err</span>(ListError::ArenaError(ArenaError::OutOfMemory))
-        );
+        <span class="kw">match </span>list.push_front(<span class="number">0</span>) {
+            <span class="prelude-val">Err</span>(ListError::ArenaError(ArenaError::OutOfMemory)) =&gt; {}
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;Out of memory not triggered&quot;</span>),
+        };
 
         <span class="macro">assert_eq!</span>(list.peek_front().unwrap(), <span class="kw-2">&amp;</span>(capacity <span class="kw">as </span>i32 - <span class="number">1</span>));
 
@@ -991,7 +995,7 @@
     <span class="kw">where
         </span>V: Vector&lt;Entry&lt;Node&lt;i32&gt;&gt;&gt;,
     {
-        list.clear();
+        list.clear().unwrap();
 
         <span class="kw">let </span>capacity = list.capacity();
 
@@ -1003,10 +1007,10 @@
             list.push_back(ele <span class="kw">as </span>i32).unwrap();
         }
 
-        <span class="macro">assert_eq!</span>(
-            list.push_back(<span class="number">0</span>),
-            <span class="prelude-val">Err</span>(ListError::ArenaError(ArenaError::OutOfMemory))
-        );
+        <span class="kw">match </span>list.push_back(<span class="number">0</span>) {
+            <span class="prelude-val">Err</span>(ListError::ArenaError(ArenaError::OutOfMemory)) =&gt; {}
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;Out of memory not triggered&quot;</span>),
+        };
 
         <span class="macro">assert_eq!</span>(list.peek_back().unwrap(), <span class="kw-2">&amp;</span>(capacity <span class="kw">as </span>i32 - <span class="number">1</span>));
 
@@ -1035,7 +1039,7 @@
 
         <span class="macro">assert!</span>(capacity &gt;= <span class="number">3</span>, <span class="string">&quot;Test not valid for lists with capacity &lt; 3 &quot;</span>);
 
-        list.clear();
+        list.clear().unwrap();
         <span class="macro">assert!</span>(list.is_empty());
 
         <span class="kw">for </span>ele <span class="kw">in </span><span class="number">0</span>..capacity {
@@ -1085,7 +1089,7 @@
 
         <span class="macro">assert!</span>(capacity &gt;= <span class="number">3</span>, <span class="string">&quot;Test not valid for lists with capacity &lt; 3 &quot;</span>);
 
-        list.clear();
+        list.clear().unwrap();
         <span class="macro">assert!</span>(list.is_empty());
 
         <span class="kw">for </span>ele <span class="kw">in </span><span class="number">0</span>..capacity {

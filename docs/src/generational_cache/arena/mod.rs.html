@@ -388,11 +388,19 @@
 <a href="#388" id="388">388</a>
 <a href="#389" id="389">389</a>
 <a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Module providing abstractions for a generational arena implemenation.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::vector::Vector;
 <span class="kw">use </span>core::{
-    fmt::{<span class="self">self</span>, Display},
+    fmt::{<span class="self">self</span>, Debug, Display},
     marker::PhantomData,
 };
 
@@ -427,13 +435,17 @@
     _phantom_type: PhantomData&lt;T&gt;,
 }
 
-<span class="attr">#[derive(PartialEq, Debug)]
-</span><span class="kw">pub enum </span>ArenaError {
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">pub enum </span>ArenaError&lt;VE&gt; {
     OutOfMemory,
     InvalidIdx,
+    VectorError(VE),
 }
 
-<span class="kw">impl </span>Display <span class="kw">for </span>ArenaError {
+<span class="kw">impl</span>&lt;VE&gt; Display <span class="kw">for </span>ArenaError&lt;VE&gt;
+<span class="kw">where
+    </span>VE: Debug,
+{
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
         <span class="macro">write!</span>(f, <span class="string">&quot;{self:?}&quot;</span>)
     }
@@ -444,7 +456,7 @@
 <span class="kw">where
     </span>V: Vector&lt;Entry&lt;T&gt;&gt;,
 {
-    <span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+    <span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), ArenaError&lt;V::Error&gt;&gt; {
         <span class="self">self</span>.free_list_head = <span class="prelude-val">Some</span>(<span class="number">0</span>);
         <span class="self">self</span>.generation = <span class="number">0</span>;
         <span class="self">self</span>.len = <span class="number">0</span>;
@@ -462,8 +474,12 @@
             </span>};
 
             <span class="kw">let </span>free_entry = Entry::Free { next_free_idx };
-            <span class="self">self</span>.entries_vec.push(free_entry);
+            <span class="self">self</span>.entries_vec
+                .push(free_entry)
+                .map_err(ArenaError::VectorError)<span class="question-mark">?</span>;
         }
+
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">pub fn </span>with_vector(vector: V) -&gt; <span class="self">Self </span>{
@@ -475,12 +491,12 @@
             _phantom_type: PhantomData,
         };
 
-        arena.clear();
+        arena.clear().unwrap();
 
         arena
     }
 
-    <span class="kw">pub fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, item: T) -&gt; <span class="prelude-ty">Result</span>&lt;Index, ArenaError&gt; {
+    <span class="kw">pub fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, item: T) -&gt; <span class="prelude-ty">Result</span>&lt;Index, ArenaError&lt;V::Error&gt;&gt; {
         <span class="kw">let </span>old_free = <span class="self">self</span>.free_list_head.ok_or(ArenaError::OutOfMemory)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.free_list_head = <span class="self">self
@@ -584,7 +600,7 @@
         </span>V: Vector&lt;Entry&lt;T&gt;&gt;,
         T: Debug + PartialEq,
     {
-        arena.clear();
+        arena.clear().unwrap();
 
         <span class="macro">assert_eq!</span>(arena.free_list_head, <span class="prelude-val">Some</span>(<span class="number">0</span>));
 
@@ -620,40 +636,40 @@
             <span class="string">&quot;Test not valid for arena with capacity &lt; 2&quot;
         </span>);
 
-        arena.clear();
+        arena.clear().unwrap();
 
         <span class="kw">let </span>index_0 = arena.insert(<span class="number">0</span>);
         <span class="macro">assert_eq!</span>(
-            index_0,
-            <span class="prelude-val">Ok</span>(Index {
+            index_0.as_ref().unwrap(),
+            <span class="kw-2">&amp;</span>Index {
                 generation: <span class="number">0</span>,
                 idx: <span class="number">0
-            </span>})
+            </span>}
         );
 
         <span class="kw">let </span>index_1 = arena.insert(<span class="number">1</span>);
         <span class="macro">assert_eq!</span>(
-            index_1,
-            <span class="prelude-val">Ok</span>(Index {
+            index_1.as_ref().unwrap(),
+            <span class="kw-2">&amp;</span>Index {
                 generation: <span class="number">1</span>,
                 idx: <span class="number">1
-            </span>})
+            </span>}
         );
 
-        <span class="kw">let </span>index_0_val = index_0.unwrap();
-        <span class="kw">let </span>item_0 = arena.get(<span class="kw-2">&amp;</span>index_0_val);
+        <span class="kw">let </span>index_0_val = index_0.as_ref().unwrap();
+        <span class="kw">let </span>item_0 = arena.get(index_0_val);
         <span class="macro">assert_eq!</span>(item_0, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="number">0</span>));
 
         <span class="kw">let </span>index_1_val = index_1.unwrap();
         <span class="kw">let </span>item_1 = arena.get(<span class="kw-2">&amp;</span>index_1_val);
         <span class="macro">assert_eq!</span>(item_1, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="number">1</span>));
 
-        <span class="kw">let </span>item_0 = arena.get_mut(<span class="kw-2">&amp;</span>index_0_val);
+        <span class="kw">let </span>item_0 = arena.get_mut(index_0_val);
         <span class="macro">assert_eq!</span>(item_0, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span><span class="number">0</span>));
         <span class="kw">let </span>item_0 = item_0.unwrap();
         <span class="kw-2">*</span>item_0 = <span class="number">25</span>;
 
-        <span class="kw">let </span>item_0 = arena.get(<span class="kw-2">&amp;</span>index_0_val);
+        <span class="kw">let </span>item_0 = arena.get(index_0_val);
         <span class="macro">assert_eq!</span>(item_0, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="number">25</span>));
 
         <span class="kw">let </span>item_1 = arena.get_mut(<span class="kw-2">&amp;</span>index_1_val);
@@ -672,15 +688,15 @@
             <span class="kw">let </span>possible_idx = last_len + i;
 
             <span class="macro">assert_eq!</span>(
-                arena.insert(<span class="number">0</span>),
-                <span class="prelude-val">Ok</span>(Index {
+                arena.insert(<span class="number">0</span>).unwrap(),
+                Index {
                     generation: possible_idx <span class="kw">as </span>u64,
                     idx: possible_idx
-                })
+                }
             )
         }
 
-        arena.clear();
+        arena.clear().unwrap();
 
         <span class="macro">assert!</span>(arena.is_empty());
     }
@@ -694,7 +710,7 @@
             <span class="string">&quot;Test not valid for arena with capacity &lt; 2&quot;
         </span>);
 
-        arena.clear();
+        arena.clear().unwrap();
 
         <span class="macro">assert_eq!</span>(arena.free_list_head.unwrap(), <span class="number">0</span>);
 
@@ -773,7 +789,7 @@
 
         <span class="macro">assert_eq!</span>(removed_count, free_position_count);
 
-        arena.clear();
+        arena.clear().unwrap();
 
         <span class="macro">assert!</span>(arena.is_empty());
     }

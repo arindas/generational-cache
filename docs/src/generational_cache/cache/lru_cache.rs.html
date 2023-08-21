@@ -339,6 +339,24 @@
 <a href="#339" id="339">339</a>
 <a href="#340" id="340">340</a>
 <a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
+<a href="#359" id="359">359</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Module providing abstractions to represent an LRUCache.
 //!
 //! ## Usage
@@ -405,7 +423,10 @@
     map::Map,
     vector::Vector,
 };
-<span class="kw">use </span>core::mem;
+<span class="kw">use </span>core::{
+    fmt::{Debug, Display},
+    mem,
+};
 
 <span class="kw">extern crate </span>alloc;
 
@@ -482,12 +503,23 @@
     }
 }
 
-<span class="attr">#[derive(PartialEq, Debug)]
-</span><span class="kw">pub enum </span>LRUCacheError {
-    ListError(ListError),
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">pub enum </span>LRUCacheError&lt;VE, ME&gt; {
+    ListError(ListError&lt;VE&gt;),
     ListUnderflow,
     MapListInconsistent,
+    MapError(ME),
     CacheMiss,
+}
+
+<span class="kw">impl</span>&lt;VE, ME&gt; Display <span class="kw">for </span>LRUCacheError&lt;VE, ME&gt;
+<span class="kw">where
+    </span>VE: Debug,
+    ME: Debug,
+{
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>core::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; core::fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">&quot;{self:?}&quot;</span>)
+    }
 }
 
 <span class="attr">#[allow(unused)]
@@ -497,7 +529,7 @@
     M: Map&lt;K, Link&gt;,
     K: Copy,
 {
-    <span class="kw">type </span>Error = LRUCacheError;
+    <span class="kw">type </span>Error = LRUCacheError&lt;V::Error, M::Error&gt;;
 
     <span class="kw">fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: K, value: T) -&gt; <span class="prelude-ty">Result</span>&lt;Eviction&lt;K, T&gt;, <span class="self">Self</span>::Error&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(link) = <span class="self">self</span>.block_refs.get(<span class="kw-2">&amp;</span>key) {
@@ -531,7 +563,9 @@
             .push_back(Block { key, value })
             .map_err(<span class="self">Self</span>::Error::ListError)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.block_refs.insert(key, link);
+        <span class="self">self</span>.block_refs
+            .insert(key, link)
+            .map_err(<span class="self">Self</span>::Error::MapError)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(eviction)
     }
@@ -574,9 +608,11 @@
         <span class="self">self</span>.block_list.is_empty()
     }
 
-    <span class="kw">fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.block_list.clear();
-        <span class="self">self</span>.block_refs.clear();
+    <span class="kw">fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
+        <span class="self">self</span>.block_list.clear().map_err(<span class="self">Self</span>::Error::ListError)<span class="question-mark">?</span>;
+        <span class="self">self</span>.block_refs.clear().map_err(<span class="self">Self</span>::Error::MapError)<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(())
     }
 }
 
@@ -665,7 +701,7 @@
 
         <span class="macro">assert_eq!</span>(cache.most_recent().unwrap(), (<span class="kw-2">&amp;</span>capacity, <span class="kw-2">&amp;</span>(capacity + <span class="number">2</span>)));
 
-        cache.clear();
+        cache.clear().unwrap();
 
         <span class="macro">assert!</span>(cache.is_empty());
 
@@ -675,7 +711,7 @@
 
         <span class="macro">assert_eq!</span>(cache.least_recent().unwrap(), (<span class="kw-2">&amp;</span><span class="number">0</span>, <span class="kw-2">&amp;</span><span class="number">0</span>));
 
-        cache.clear();
+        cache.clear().unwrap();
 
         <span class="macro">assert!</span>(cache.is_empty());
     }
