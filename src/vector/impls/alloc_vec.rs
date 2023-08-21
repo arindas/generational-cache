@@ -4,7 +4,10 @@ extern crate alloc;
 
 use crate::vector::Vector;
 use alloc::vec::Vec;
-use core::ops::{Deref, DerefMut};
+use core::{
+    convert::Infallible,
+    ops::{Deref, DerefMut},
+};
 
 /// Implements [Vector] with [alloc::vec::Vec].
 pub struct AllocVec<T> {
@@ -44,12 +47,15 @@ impl<T> Deref for AllocVec<T> {
 }
 
 impl<T> Vector<T> for AllocVec<T> {
+    type Error = Infallible;
+
     fn capacity(&self) -> usize {
         self.vec.capacity()
     }
 
-    fn push(&mut self, item: T) {
-        self.vec.push(item)
+    fn push(&mut self, item: T) -> Result<(), Self::Error> {
+        self.vec.push(item);
+        Ok(())
     }
 
     fn clear(&mut self) {

@@ -4,9 +4,11 @@ use core::ops::DerefMut;
 
 /// Represents an abstract vector over a type accessible as mutable slice.
 pub trait Vector<T>: DerefMut<Target = [T]> {
+    type Error: core::fmt::Debug;
+
     fn capacity(&self) -> usize;
 
-    fn push(&mut self, item: T);
+    fn push(&mut self, item: T) -> Result<(), Self::Error>;
 
     fn clear(&mut self);
 }
@@ -23,7 +25,7 @@ pub mod tests {
         assert!(vector.is_empty());
 
         for i in 0..vector.capacity() {
-            vector.push(i);
+            assert!(matches!(vector.push(i), Ok(_)));
         }
 
         assert_eq!(vector.len(), vector.capacity());

@@ -30,7 +30,7 @@ pub trait Cache<K, V> {
         self.len() == 0
     }
 
-    fn clear(&mut self);
+    fn clear(&mut self) -> Result<(), Self::Error>;
 }
 
 pub mod lru_cache;

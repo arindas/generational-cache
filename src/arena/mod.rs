@@ -2,7 +2,7 @@
 
 use crate::vector::Vector;
 use core::{
-    fmt::{self, Display},
+    fmt::{self, Debug, Display},
     marker::PhantomData,
 };
 
@@ -37,13 +37,17 @@ pub struct Arena<V, T> {
     _phantom_type: PhantomData<T>,
 }
 
-#[derive(PartialEq, Debug)]
-pub enum ArenaError {
+#[derive(Debug)]
+pub enum ArenaError<VE> {
     OutOfMemory,
     InvalidIdx,
+    VectorError(VE),
 }
 
-impl Display for ArenaError {
+impl<VE> Display for ArenaError<VE>
+where
+    VE: Debug,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{self:?}")
     }
@@ -54,7 +58,7 @@ impl<V, T> Arena<V, T>
 where
     V: Vector<Entry<T>>,
 {
-    pub fn clear(&mut self) {
+    pub fn clear(&mut self) -> Result<(), ArenaError<V::Error>> {
         self.free_list_head = Some(0);
         self.generation = 0;
         self.len = 0;
@@ -72,8 +76,12 @@ where
             };
 
             let free_entry = Entry::Free { next_free_idx };
-            self.entries_vec.push(free_entry);
+            self.entries_vec
+                .push(free_entry)
+                .map_err(ArenaError::VectorError)?;
         }
+
+        Ok(())
     }
 
     pub fn with_vector(vector: V) -> Self {
@@ -85,12 +93,12 @@ where
             _phantom_type: PhantomData,
         };
 
-        arena.clear();
+        arena.clear().unwrap();
 
         arena
     }
 
-    pub fn insert(&mut self, item: T) -> Result<Index, ArenaError> {
+    pub fn insert(&mut self, item: T) -> Result<Index, ArenaError<V::Error>> {
         let old_free = self.free_list_head.ok_or(ArenaError::OutOfMemory)?;
 
         self.free_list_head = self
@@ -194,7 +202,7 @@ pub mod tests {
         V: Vector<Entry<T>>,
         T: Debug + PartialEq,
     {
-        arena.clear();
+        arena.clear().unwrap();
 
         assert_eq!(arena.free_list_head, Some(0));
 
@@ -230,40 +238,40 @@ pub mod tests {
             "Test not valid for arena with capacity < 2"
         );
 
-        arena.clear();
+        arena.clear().unwrap();
 
         let index_0 = arena.insert(0);
         assert_eq!(
-            index_0,
-            Ok(Index {
+            index_0.as_ref().unwrap(),
+            &Index {
                 generation: 0,
                 idx: 0
-            })
+            }
         );
 
         let index_1 = arena.insert(1);
         assert_eq!(
-            index_1,
-            Ok(Index {
+            index_1.as_ref().unwrap(),
+            &Index {
                 generation: 1,
                 idx: 1
-            })
+            }
         );
 
-        let index_0_val = index_0.unwrap();
-        let item_0 = arena.get(&index_0_val);
+        let index_0_val = index_0.as_ref().unwrap();
+        let item_0 = arena.get(index_0_val);
         assert_eq!(item_0, Some(&0));
 
         let index_1_val = index_1.unwrap();
         let item_1 = arena.get(&index_1_val);
         assert_eq!(item_1, Some(&1));
 
-        let item_0 = arena.get_mut(&index_0_val);
+        let item_0 = arena.get_mut(index_0_val);
         assert_eq!(item_0, Some(&mut 0));
         let item_0 = item_0.unwrap();
         *item_0 = 25;
 
-        let item_0 = arena.get(&index_0_val);
+        let item_0 = arena.get(index_0_val);
         assert_eq!(item_0, Some(&25));
 
         let item_1 = arena.get_mut(&index_1_val);
@@ -282,15 +290,15 @@ pub mod tests {
             let possible_idx = last_len + i;
 
             assert_eq!(
-                arena.insert(0),
-                Ok(Index {
+                arena.insert(0).unwrap(),
+                Index {
                     generation: possible_idx as u64,
                     idx: possible_idx
-                })
+                }
             )
         }
 
-        arena.clear();
+        arena.clear().unwrap();
 
         assert!(arena.is_empty());
     }
@@ -304,7 +312,7 @@ pub mod tests {
             "Test not valid for arena with capacity < 2"
         );
 
-        arena.clear();
+        arena.clear().unwrap();
 
         assert_eq!(arena.free_list_head.unwrap(), 0);
 
@@ -383,7 +391,7 @@ pub mod tests {
 
         assert_eq!(removed_count, free_position_count);
 
-        arena.clear();
+        arena.clear().unwrap();
 
         assert!(arena.is_empty());
     }
