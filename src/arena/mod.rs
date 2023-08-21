@@ -6,12 +6,14 @@ use core::{
     marker::PhantomData,
 };
 
+/// An generational counter augemented index to track entries.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Index {
     pub generation: u64,
     pub idx: usize,
 }
 
+/// An allocation entry in a generational arena.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Entry<T> {
     Occupied { value: T, generation: u64 },
@@ -47,6 +49,7 @@ impl Display for ArenaError {
     }
 }
 
+/// A generational arena.
 impl<V, T> Arena<V, T>
 where
     V: Vector<Entry<T>>,

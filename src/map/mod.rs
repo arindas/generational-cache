@@ -1,3 +1,6 @@
+//! Module providing abstractions to implement maps.
+
+/// An abstrct mapping from a set of keys to a set of values.
 pub trait Map<K, V> {
     fn insert(&mut self, key: K, value: V) -> Option<V>;
 
