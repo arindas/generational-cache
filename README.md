@@ -29,6 +29,8 @@ Refer to [API Documentation](https://arindas.github.io/generational-cache/docs/g
 ### Examples
 
 ```rust
+#[no_std]
+
 use generational_cache::prelude::*;
 
 const CAPACITY: usize = 3;
