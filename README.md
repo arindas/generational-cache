@@ -1,10 +1,9 @@
 # generational-cache
 
-A library crate providing generational-arena backed cache implementations in 100% safe, [no_std] compatible rust.
+A library crate providing generational-arena backed cache implementations in 100% safe, `[no_std]` compatible rust.
 
 ```rust
 use generational_cache::prelude::*;
-
 
 const CAPACITY: usize = 3;
 

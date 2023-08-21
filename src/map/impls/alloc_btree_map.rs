@@ -1,8 +1,11 @@
+//! Module providing a map implementation based on [alloc::collections::BTreeMap].
+
 extern crate alloc;
 
 use crate::map::Map;
 use alloc::collections::BTreeMap;
 
+/// A [Map] implementation based on [alloc::collections::BTreeMap].
 pub struct AllocBTreeMap<K, V> {
     btree_map: BTreeMap<K, V>,
 }

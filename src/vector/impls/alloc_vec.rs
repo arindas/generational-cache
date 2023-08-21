@@ -1,9 +1,12 @@
+//! Module providing a vector implementation based on [alloc::vec::Vec].
+
 extern crate alloc;
 
 use crate::vector::Vector;
 use alloc::vec::Vec;
 use core::ops::{Deref, DerefMut};
 
+/// Implements [Vector] with [alloc::vec::Vec].
 pub struct AllocVec<T> {
     vec: Vec<T>,
 }

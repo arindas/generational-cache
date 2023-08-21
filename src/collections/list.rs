@@ -7,11 +7,13 @@ use crate::{
     vector::Vector,
 };
 
+/// Represents a link to node in the linked list.
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Link {
     pub index: Index,
 }
 
+/// Represents a node in a linked list.
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Node<T> {
     pub value: T,
@@ -43,6 +45,7 @@ where
     }
 }
 
+/// A double-linked linked list implementation powered by a [generational arena](Arena).
 pub struct LinkedList<V, T> {
     backing_arena: Arena<V, Node<T>>,
 

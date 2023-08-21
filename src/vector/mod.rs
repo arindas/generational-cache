@@ -1,5 +1,8 @@
+//! Module providing abstractions for reperesenting vectors.
+
 use core::ops::DerefMut;
 
+/// Represents an abstract vector over a type accessible as mutable slice.
 pub trait Vector<T>: DerefMut<Target = [T]> {
     fn capacity(&self) -> usize;
 

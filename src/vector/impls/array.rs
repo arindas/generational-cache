@@ -1,9 +1,12 @@
+//! Module provinding a vector implementation based on arrays.
+
 use crate::vector::Vector;
 use core::{
     marker::Copy,
     ops::{Deref, DerefMut},
 };
 
+/// Implements [Vector] with `[T; N]`.
 pub struct Array<T, const N: usize> {
     buffer: [T; N],
     len: usize,

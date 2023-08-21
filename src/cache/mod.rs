@@ -1,3 +1,6 @@
+//! Module providing abstractions to represent caches.
+
+/// An evicted value from cache.
 #[derive(Debug, PartialEq, Eq)]
 pub enum Eviction<K, V> {
     Block { key: K, value: V },
@@ -5,6 +8,7 @@ pub enum Eviction<K, V> {
     None,
 }
 
+/// A size bounded map, where certain existing entries are evicted to make space for new entires.
 pub trait Cache<K, V> {
     type Error;
 
