@@ -9,13 +9,16 @@
   <a href="https://codecov.io/gh/arindas/generational-cache"> 
     <img src="https://codecov.io/gh/arindas/generational-cache/branch/main/graph/badge.svg?token=44d8cAmnlE"/> 
   </a>
+  <a href="https://crates.io/crates/generational-cache">
+  <img src="https://img.shields.io/crates/v/generational-cache" />
+  </a>
   <a href="https://github.com/arindas/generational-cache/actions/workflows/rustdoc.yml">
     <img src="https://github.com/arindas/generational-cache/actions/workflows/rustdoc.yml/badge.svg">
   </a>
 </p>
 
 <p align="center">
-A lib crate providing generational-arena backed cache impls. in 100% safe, [no_std] compatible Rust.
+Generational Arena based cache impls. in 100% safe, [no_std] compatible Rust.
 </p>
 
 ## Usage
@@ -24,13 +27,14 @@ A lib crate providing generational-arena backed cache impls. in 100% safe, [no_s
 
 ```toml
 [dependencies]
-generational-cache = "https://github.com/arindas/generational-cache"
+generational-cache = "0.1.0"
 ```
 
 Refer to [API Documentation](https://arindas.github.io/generational-cache/docs/generational_cache/) for more details.
 
 ### Examples
 
+#### `#1`: Generational arena based LRU cache implementation
 ```rust
 #[no_std]
 
@@ -38,6 +42,7 @@ use generational_cache::prelude::*;
 
 const CAPACITY: usize = 3;
 
+// users can choose between different map and vector implementations
 let mut cache = LRUCache::<_, i32, u64, AllocBTreeMap<_, _>>::with_backing_vector(Array::<_, CAPACITY>::new());
 
 cache.insert(-1, 1).unwrap();
@@ -88,6 +93,8 @@ match cache.insert(0, 0) {
 };
 
 ```
+
+(… we plan on adding more cache implementations in the future).
 
 ## License
 This repository is licensed under the MIT License. See [LICENSE](./LICENSE) for more details.
