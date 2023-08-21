@@ -9,10 +9,13 @@
   <a href="https://codecov.io/gh/arindas/generational-cache"> 
     <img src="https://codecov.io/gh/arindas/generational-cache/branch/main/graph/badge.svg?token=44d8cAmnlE"/> 
   </a>
+  <a href="https://github.com/arindas/generational-cache/actions/workflows/rustdoc.yml">
+    <img src="https://github.com/arindas/generational-cache/actions/workflows/rustdoc.yml/badge.svg">
+  </a>
 </p>
 
 <p align="center">
-A lib crate providing generational-arena backed cache implementations in 100% safe, [no_std] compatible Rust.
+A lib crate providing generational-arena backed cache impls. in 100% safe, [no_std] compatible Rust.
 </p>
 
 ## Usage
