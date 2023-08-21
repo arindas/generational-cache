@@ -81,7 +81,7 @@ pub struct Block<K, T> {
 /// Alias representing block entries for storage in a generational arena.
 pub type LRUCacheBlockArenaEntry<K, T> = LinkedListArenaEntry<Block<K, T>>;
 
-/// A generational-cache powered LRUCache implementation.
+/// A [generational-arena](crate::arena::Arena) powered LRUCache implementation.
 pub struct LRUCache<V, K, T, M> {
     block_list: LinkedList<V, Block<K, T>>,
     block_refs: M,

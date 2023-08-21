@@ -1,5 +1,25 @@
 //! Module providing abstractions for a generational arena implemenation.
-
+//!
+//! ## Usage
+//! ```
+//! #[no_std]
+//!
+//! use generational_cache::prelude::*;
+//!
+//! const CAPACITY: usize = 5;
+//!
+//! let mut arena = Arena::<_, i32>::with_vector(Array::<_, CAPACITY>::new());
+//! let index = arena.insert(78).unwrap(); // allocate new element in arena
+//! let i_ref = arena.get(&index);
+//! assert_eq!(i_ref, Some(&78));
+//! let i_m_ref = arena.get_mut(&index).unwrap();
+//! *i_m_ref = -68418;
+//! assert_eq!(arena.get(&index), Some(&-68418));
+//!
+//! arena.remove(&index).unwrap();
+//!
+//! assert!(arena.get(&index).is_none());
+//! ```
 use crate::vector::Vector;
 use core::{
     fmt::{self, Debug, Display},
@@ -27,6 +47,13 @@ impl<T> Default for Entry<T> {
     }
 }
 
+/// A generational arena for allocating memory based off a vector. Every
+/// entry is associated with a generation counter to uniquely identify
+/// newer allocations from older reclaimed allocations at the same
+/// position in the vector.
+///
+/// This is inspired from the crate
+/// ["generational-arena"](https://docs.rs/generational-arena)
 pub struct Arena<V, T> {
     entries_vec: V,
     generation: u64,
