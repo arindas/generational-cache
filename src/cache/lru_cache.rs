@@ -64,7 +64,10 @@ use crate::{
     map::Map,
     vector::Vector,
 };
-use core::mem;
+use core::{
+    fmt::{Debug, Display},
+    mem,
+};
 
 extern crate alloc;
 
@@ -141,12 +144,23 @@ where
     }
 }
 
-#[derive(PartialEq, Debug)]
-pub enum LRUCacheError {
-    ListError(ListError),
+#[derive(Debug)]
+pub enum LRUCacheError<VE, ME> {
+    ListError(ListError<VE>),
     ListUnderflow,
     MapListInconsistent,
+    MapError(ME),
     CacheMiss,
+}
+
+impl<VE, ME> Display for LRUCacheError<VE, ME>
+where
+    VE: Debug,
+    ME: Debug,
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{self:?}")
+    }
 }
 
 #[allow(unused)]
@@ -156,7 +170,7 @@ where
     M: Map<K, Link>,
     K: Copy,
 {
-    type Error = LRUCacheError;
+    type Error = LRUCacheError<V::Error, M::Error>;
 
     fn insert(&mut self, key: K, value: T) -> Result<Eviction<K, T>, Self::Error> {
         if let Some(link) = self.block_refs.get(&key) {
@@ -190,7 +204,9 @@ where
             .push_back(Block { key, value })
             .map_err(Self::Error::ListError)?;
 
-        self.block_refs.insert(key, link);
+        self.block_refs
+            .insert(key, link)
+            .map_err(Self::Error::MapError)?;
 
         Ok(eviction)
     }
@@ -233,9 +249,11 @@ where
         self.block_list.is_empty()
     }
 
-    fn clear(&mut self) {
-        self.block_list.clear();
-        self.block_refs.clear();
+    fn clear(&mut self) -> Result<(), Self::Error> {
+        self.block_list.clear().map_err(Self::Error::ListError)?;
+        self.block_refs.clear().map_err(Self::Error::MapError)?;
+
+        Ok(())
     }
 }
 
@@ -324,7 +342,7 @@ pub mod tests {
 
         assert_eq!(cache.most_recent().unwrap(), (&capacity, &(capacity + 2)));
 
-        cache.clear();
+        cache.clear().unwrap();
 
         assert!(cache.is_empty());
 
@@ -334,7 +352,7 @@ pub mod tests {
 
         assert_eq!(cache.least_recent().unwrap(), (&0, &0));
 
-        cache.clear();
+        cache.clear().unwrap();
 
         assert!(cache.is_empty());
     }

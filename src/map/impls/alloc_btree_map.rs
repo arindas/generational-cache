@@ -29,8 +29,10 @@ impl<K, V> AllocBTreeMap<K, V> {
 }
 
 impl<K: Ord, V> Map<K, V> for AllocBTreeMap<K, V> {
-    fn insert(&mut self, key: K, value: V) -> Option<V> {
-        self.btree_map.insert(key, value)
+    type Error = core::convert::Infallible;
+
+    fn insert(&mut self, key: K, value: V) -> Result<Option<V>, Self::Error> {
+        Ok(self.btree_map.insert(key, value))
     }
 
     fn get(&self, key: &K) -> Option<&V> {
@@ -45,11 +47,21 @@ impl<K: Ord, V> Map<K, V> for AllocBTreeMap<K, V> {
         self.btree_map.remove(key)
     }
 
-    fn clear(&mut self) {
-        self.btree_map.clear()
+    fn clear(&mut self) -> Result<(), Self::Error> {
+        self.btree_map.clear();
+
+        Ok(())
     }
 
     fn is_empty(&self) -> bool {
         self.btree_map.is_empty()
+    }
+
+    fn capacity(&self) -> Option<usize> {
+        None
+    }
+
+    fn len(&self) -> usize {
+        self.btree_map.len()
     }
 }

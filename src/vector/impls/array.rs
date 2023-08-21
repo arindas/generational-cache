@@ -50,14 +50,26 @@ impl<T, const N: usize> Deref for Array<T, N> {
     }
 }
 
+#[derive(PartialEq, Debug)]
+pub enum ArrayError {
+    OutOfMemory,
+}
+
 impl<T, const N: usize> Vector<T> for Array<T, N> {
+    type Error = ArrayError;
+
     fn capacity(&self) -> usize {
         N
     }
 
-    fn push(&mut self, item: T) {
-        self.buffer[self.len] = item;
-        self.len += 1;
+    fn push(&mut self, item: T) -> Result<(), Self::Error> {
+        if self.len() == self.capacity() {
+            Err(Self::Error::OutOfMemory)
+        } else {
+            self.buffer[self.len] = item;
+            self.len += 1;
+            Ok(())
+        }
     }
 
     fn clear(&mut self) {

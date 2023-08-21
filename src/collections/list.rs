@@ -1,6 +1,6 @@
 //! Module providing abstractions for a linked list implementation.
 
-use core::fmt::{self, Display};
+use core::fmt::{self, Debug, Display};
 
 use crate::{
     arena::{Arena, ArenaError, Entry, Index},
@@ -55,14 +55,17 @@ pub struct LinkedList<V, T> {
     len: usize,
 }
 
-#[derive(PartialEq, Debug)]
-pub enum ListError {
-    ArenaError(ArenaError),
+#[derive(Debug)]
+pub enum ListError<VE> {
+    ArenaError(ArenaError<VE>),
     LinkBroken,
     ListEmpty,
 }
 
-impl Display for ListError {
+impl<VE> Display for ListError<VE>
+where
+    VE: Debug,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{self:?}")
     }
@@ -83,11 +86,14 @@ where
         }
     }
 
-    pub fn clear(&mut self) {
-        self.backing_arena.clear();
+    pub fn clear(&mut self) -> Result<(), ListError<V::Error>> {
+        self.backing_arena.clear().map_err(ListError::ArenaError)?;
+
         self.head = None;
         self.tail = None;
         self.len = 0;
+
+        Ok(())
     }
 
     pub fn capacity(&self) -> usize {
@@ -100,10 +106,6 @@ where
 
     pub fn is_empty(&self) -> bool {
         self.head.is_none()
-    }
-
-    pub fn is_full(&self) -> bool {
-        self.len() == self.capacity()
     }
 
     fn get_node_mut(&mut self, link: &Link) -> Option<&mut Node<T>> {
@@ -154,7 +156,7 @@ where
         Some(())
     }
 
-    pub fn push_front(&mut self, value: T) -> Result<Link, ListError> {
+    pub fn push_front(&mut self, value: T) -> Result<Link, ListError<V::Error>> {
         let node_index = self
             .backing_arena
             .insert(Node::with_value(value))
@@ -167,7 +169,7 @@ where
         Ok(node_link)
     }
 
-    pub fn push_back(&mut self, value: T) -> Result<Link, ListError> {
+    pub fn push_back(&mut self, value: T) -> Result<Link, ListError<V::Error>> {
         let node_index = self
             .backing_arena
             .insert(Node::with_value(value))
@@ -341,7 +343,7 @@ pub mod tests {
         V: Vector<Entry<Node<T>>>,
         T: Debug + PartialEq + Default,
     {
-        list.clear();
+        list.clear().unwrap();
 
         let capacity = list.capacity();
 
@@ -354,7 +356,7 @@ pub mod tests {
             list.push_back(T::default()).unwrap();
         }
 
-        assert!(list.is_full());
+        assert!(list.len() == list.capacity());
 
         let mut i = 0;
         for (_, t) in &list {
@@ -367,17 +369,17 @@ pub mod tests {
         assert_eq!(list.peek_front(), Some(&T::default()));
         assert_eq!(list.peek_back(), Some(&T::default()));
 
-        assert_eq!(
-            list.push_back(T::default()),
-            Err(ListError::ArenaError(ArenaError::OutOfMemory))
-        );
+        match list.push_front(T::default()) {
+            Err(ListError::ArenaError(ArenaError::OutOfMemory)) => {}
+            _ => unreachable!("Out of memory not triggered"),
+        };
 
-        assert_eq!(
-            list.push_back(T::default()),
-            Err(ListError::ArenaError(ArenaError::OutOfMemory))
-        );
+        match list.push_back(T::default()) {
+            Err(ListError::ArenaError(ArenaError::OutOfMemory)) => {}
+            _ => unreachable!("Out of memory not triggered"),
+        };
 
-        list.clear();
+        list.clear().unwrap();
 
         assert!(list.is_empty());
     }
@@ -386,7 +388,7 @@ pub mod tests {
     where
         V: Vector<Entry<Node<i32>>>,
     {
-        list.clear();
+        list.clear().unwrap();
 
         let capacity = list.capacity();
 
@@ -398,10 +400,10 @@ pub mod tests {
             list.push_front(ele as i32).unwrap();
         }
 
-        assert_eq!(
-            list.push_front(0),
-            Err(ListError::ArenaError(ArenaError::OutOfMemory))
-        );
+        match list.push_front(0) {
+            Err(ListError::ArenaError(ArenaError::OutOfMemory)) => {}
+            _ => unreachable!("Out of memory not triggered"),
+        };
 
         assert_eq!(list.peek_front().unwrap(), &(capacity as i32 - 1));
 
@@ -426,7 +428,7 @@ pub mod tests {
     where
         V: Vector<Entry<Node<i32>>>,
     {
-        list.clear();
+        list.clear().unwrap();
 
         let capacity = list.capacity();
 
@@ -438,10 +440,10 @@ pub mod tests {
             list.push_back(ele as i32).unwrap();
         }
 
-        assert_eq!(
-            list.push_back(0),
-            Err(ListError::ArenaError(ArenaError::OutOfMemory))
-        );
+        match list.push_back(0) {
+            Err(ListError::ArenaError(ArenaError::OutOfMemory)) => {}
+            _ => unreachable!("Out of memory not triggered"),
+        };
 
         assert_eq!(list.peek_back().unwrap(), &(capacity as i32 - 1));
 
@@ -470,7 +472,7 @@ pub mod tests {
 
         assert!(capacity >= 3, "Test not valid for lists with capacity < 3 ");
 
-        list.clear();
+        list.clear().unwrap();
         assert!(list.is_empty());
 
         for ele in 0..capacity {
@@ -520,7 +522,7 @@ pub mod tests {
 
         assert!(capacity >= 3, "Test not valid for lists with capacity < 3 ");
 
-        list.clear();
+        list.clear().unwrap();
         assert!(list.is_empty());
 
         for ele in 0..capacity {

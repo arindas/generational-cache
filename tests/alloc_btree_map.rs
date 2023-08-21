@@ -8,7 +8,7 @@ const TEST_CAPACITY: usize = 1 << 4;
 
 #[test]
 fn test_alloc_btree_map_consistency() {
-    map::tests::_test_map_consistency(AllocBTreeMap::new());
+    map::tests::_test_map_consistency::<AllocBTreeMap<_, _>>();
 }
 
 #[test]
