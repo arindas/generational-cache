@@ -1,6 +1,32 @@
-# generational-cache
+<p align="center">
+<h1 align="center"><code>generational-cache</code></h1>
+</p>
 
-A library crate providing generational-arena backed cache implementations in 100% safe, `[no_std]` compatible rust.
+<p align="center">
+  <a href="https://github.com/arindas/generational-cache/actions/workflows/rust-ci.yml">
+    <img src="https://github.com/arindas/generational-cache/actions/workflows/rust-ci.yml/badge.svg">
+  </a>
+  <a href="https://codecov.io/gh/arindas/generational-cache"> 
+    <img src="https://codecov.io/gh/arindas/generational-cache/branch/main/graph/badge.svg?token=44d8cAmnlE"/> 
+  </a>
+</p>
+
+<p align="center">
+A library crate providing generational-arena backed cache implementations in 100% safe, [no_std] compatible rust.
+</p>
+
+## Usage
+
+`generational-cache` is a library crate. You may include it in your `Cargo.toml` as follows:
+
+```toml
+[dependencies]
+generational-cache = "https://github.com/arindas/generational-cache"
+```
+
+Refer to [API Documentation](https://arindas.github.io/generational-cache/docs/generational_cache/) for more details.
+
+### Examples
 
 ```rust
 use generational_cache::prelude::*;
@@ -56,15 +82,6 @@ match cache.insert(0, 0) {
     _ => unreachable!("Wrong error on list underflow."),
 };
 
-```
-
-## Usage
-
-`generational-cache` is a library crate. You may include it in your `Cargo.toml` as follows:
-
-```toml
-[dependencies]
-generational-cache = "https://github.com/arindas/generational-cache"
 ```
 
 ## License
