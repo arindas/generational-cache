@@ -64,5 +64,9 @@ match cache.insert(0, 0) {
 `generational-cache` is a library crate. You may include it in your `Cargo.toml` as follows:
 
 ```toml
-generational-cache = "https://github.com/arindas/generational-cache.git"
+[dependencies]
+generational-cache = "https://github.com/arindas/generational-cache"
 ```
+
+## License
+This repository is licensed under the MIT License. See [LICENSE](./LICENSE) for more details.
