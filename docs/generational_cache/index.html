@@ -19,7 +19,9 @@ generational-cache = &quot;https://github.com/arindas/generational-cache&quot;
 </code></pre></div>
 <p>Refer to <a href="https://arindas.github.io/generational-cache/docs/generational_cache/">API Documentation</a> for more details.</p>
 <h4 id="examples"><a href="#examples">Examples</a></h4>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>generational_cache::prelude::<span class="kw-2">*</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[no_std]
+
+</span><span class="kw">use </span>generational_cache::prelude::<span class="kw-2">*</span>;
 
 <span class="kw">const </span>CAPACITY: usize = <span class="number">3</span>;
 
