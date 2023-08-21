@@ -25,11 +25,8 @@ pub mod tests {
 
         assert_eq!(vector.len(), vector.capacity());
 
-        let mut j = 0;
-
-        for i in vector.iter() {
+        for (j, i) in vector.iter().enumerate() {
             assert_eq!(i, &j);
-            j += 1;
         }
 
         vector.clear();

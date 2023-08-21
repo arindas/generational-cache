@@ -1,6 +1,6 @@
 use super::{Cache, Eviction};
 use crate::{
-    arena::Entry,
+    arena::{Arena, Entry},
     collections::list::{Link, LinkedList, ListError, Node},
     map::Map,
     vector::Vector,
@@ -15,6 +15,8 @@ pub struct Block<K, T> {
     pub value: T,
 }
 
+pub type CacheBlockArenaEntry<K, T> = Entry<Node<Block<K, T>>>;
+
 pub type BlockList<V, K, T> = LinkedList<V, Block<K, T>>;
 
 pub struct LRUCache<V, K, T, M> {
@@ -24,7 +26,7 @@ pub struct LRUCache<V, K, T, M> {
 
 impl<V, K, T, M> LRUCache<V, K, T, M>
 where
-    V: Vector<Entry<Node<Block<K, T>>>>,
+    V: Vector<CacheBlockArenaEntry<K, T>>,
     M: Map<K, Link>,
 {
     pub fn with_block_list_and_block_refs(
@@ -39,6 +41,51 @@ where
             block_refs,
         }
     }
+
+    pub fn least_recent(&self) -> Option<(&K, &T)> {
+        let block = self.block_list.peek_front()?;
+        Some((&block.key, &block.value))
+    }
+
+    pub fn most_recent(&self) -> Option<(&K, &T)> {
+        let block = self.block_list.peek_back()?;
+        Some((&block.key, &block.value))
+    }
+}
+
+impl<V, K, T, M> LRUCache<V, K, T, M>
+where
+    V: Vector<CacheBlockArenaEntry<K, T>>,
+    M: Map<K, Link>,
+{
+    pub fn with_backing_arena_and_map(arena: Arena<V, Node<Block<K, T>>>, map: M) -> Self {
+        Self::with_block_list_and_block_refs(LinkedList::with_backing_arena(arena), map)
+    }
+
+    pub fn with_backing_vector_and_map(vector: V, map: M) -> Self {
+        let block_list = LinkedList::with_backing_vector(vector);
+        Self::with_block_list_and_block_refs(block_list, map)
+    }
+}
+
+impl<V, K, T, M> LRUCache<V, K, T, M>
+where
+    V: Vector<Entry<Node<Block<K, T>>>>,
+    M: Map<K, Link> + Default,
+{
+    pub fn with_backing_vector(vector: V) -> Self {
+        Self::with_backing_vector_and_map(vector, M::default())
+    }
+}
+
+impl<V, K, T, M> Default for LRUCache<V, K, T, M>
+where
+    V: Vector<CacheBlockArenaEntry<K, T>> + Default,
+    M: Map<K, Link> + Default,
+{
+    fn default() -> Self {
+        Self::with_backing_vector(V::default())
+    }
 }
 
 #[derive(PartialEq, Debug)]
@@ -52,7 +99,7 @@ pub enum CacheError {
 #[allow(unused)]
 impl<V, K, T, M> Cache<K, T> for LRUCache<V, K, T, M>
 where
-    V: Vector<Entry<Node<Block<K, T>>>>,
+    V: Vector<CacheBlockArenaEntry<K, T>>,
     M: Map<K, Link>,
     K: Copy,
 {
@@ -136,5 +183,81 @@ where
     fn clear(&mut self) {
         self.block_list.clear();
         self.block_refs.clear();
+    }
+}
+
+#[doc(hidden)]
+pub mod tests {
+
+    use super::{
+        super::super::arena::Arena, Cache, CacheBlockArenaEntry, CacheError, Eviction, LRUCache,
+        Link, LinkedList, Map, Vector,
+    };
+
+    pub fn _test_cache_correctness<VX, VY, M>(
+        zero_capacity_vec_provider: impl Fn() -> VX,
+        vec_provider: impl Fn() -> VY,
+    ) where
+        VX: Vector<CacheBlockArenaEntry<usize, usize>>,
+        VY: Vector<CacheBlockArenaEntry<usize, usize>>,
+        M: Map<usize, Link> + Default,
+    {
+        let zero_capacity_vec = zero_capacity_vec_provider();
+        assert_eq!(
+            zero_capacity_vec.capacity(),
+            0,
+            "Zero capacity vector provider yielded vector of non zero capacity."
+        );
+
+        let mut cache = LRUCache::with_block_list_and_block_refs(
+            LinkedList::with_backing_arena(Arena::with_vector(zero_capacity_vec)),
+            M::default(),
+        );
+
+        match cache.insert(0, 0) {
+            Err(CacheError::ListUnderflow) => {}
+            _ => unreachable!("Wrong error on list underflow."),
+        };
+
+        let mut cache = LRUCache::with_block_list_and_block_refs(
+            LinkedList::with_backing_arena(Arena::with_vector(vec_provider())),
+            M::default(),
+        );
+
+        let capacity = cache.capacity();
+
+        assert!(
+            capacity > 3,
+            "Too small capacity: {} to run meaningful tests.",
+            capacity
+        );
+
+        for i in 0..cache.capacity() {
+            assert_eq!(cache.insert(i, i).unwrap(), Eviction::None);
+        }
+
+        assert_eq!(cache.least_recent().unwrap(), (&0, &0));
+
+        assert_eq!(
+            cache.insert(capacity, capacity).unwrap(),
+            Eviction::Block { key: 0, value: 0 }
+        );
+
+        assert_eq!(cache.query(&1).unwrap(), &1);
+
+        assert_eq!(cache.least_recent().unwrap(), (&2, &2));
+        assert_eq!(cache.most_recent().unwrap(), (&1, &1));
+
+        assert_eq!(
+            cache.insert(capacity + 1, capacity + 1).unwrap(),
+            Eviction::Block { key: 2, value: 2 }
+        );
+
+        assert_eq!(
+            cache.insert(capacity, capacity + 2).unwrap(),
+            Eviction::Value(capacity)
+        );
+
+        assert_eq!(cache.most_recent().unwrap(), (&capacity, &(capacity + 2)));
     }
 }

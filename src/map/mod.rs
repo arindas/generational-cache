@@ -35,7 +35,10 @@ pub mod tests {
 
         for i in 0..NUM_ENTRIES {
             let val = map.get_mut(&i);
-            val.map(|x| *x = i + 1);
+
+            if let Some(val) = val {
+                *val += 1;
+            }
         }
 
         for i in 0..NUM_ENTRIES {

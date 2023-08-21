@@ -1,6 +1,28 @@
-use generational_cache::map::{self, impls::alloc_btree_map::AllocBTreeMap};
+use generational_cache::{
+    cache::lru_cache::{self, CacheBlockArenaEntry},
+    map::{self, impls::alloc_btree_map::AllocBTreeMap},
+    vector::impls::{alloc_vec::AllocVec, array::Array},
+};
+
+const TEST_CAPACITY: usize = 1 << 4;
 
 #[test]
-fn test_allocbtreemap_consistency() {
+fn test_alloc_btree_map_consistency() {
     map::tests::_test_map_consistency(AllocBTreeMap::new());
+}
+
+#[test]
+fn test_alloc_btree_alloc_vec_backed_lru_cache_consistency() {
+    lru_cache::tests::_test_cache_correctness::<_, _, AllocBTreeMap<_, _>>(
+        || AllocVec::with_capacity(0),
+        || AllocVec::with_capacity(TEST_CAPACITY),
+    );
+}
+
+#[test]
+fn test_alloc_btree_array_vec_backed_lru_cache_consistency() {
+    lru_cache::tests::_test_cache_correctness::<_, _, AllocBTreeMap<_, _>>(
+        || Array::<CacheBlockArenaEntry<usize, usize>, 0>::new(),
+        || Array::<CacheBlockArenaEntry<usize, usize>, TEST_CAPACITY>::new(),
+    );
 }

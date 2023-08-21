@@ -80,6 +80,15 @@ where
         }
     }
 
+    pub fn with_backing_vector(vector: V) -> Self {
+        Self {
+            backing_arena: Arena::with_vector(vector),
+            head: None,
+            tail: None,
+            len: 0,
+        }
+    }
+
     pub fn clear(&mut self) {
         self.backing_arena.clear();
         self.head = None;

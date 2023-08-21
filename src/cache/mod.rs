@@ -1,3 +1,4 @@
+#[derive(Debug, PartialEq, Eq)]
 pub enum Eviction<K, V> {
     Block { key: K, value: V },
     Value(V),
