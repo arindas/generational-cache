@@ -30,7 +30,8 @@ Generational Arena based cache impls. in 100% safe, [no_std] compatible Rust.
 generational-cache = "0.1.0"
 ```
 
-Refer to [API Documentation](https://arindas.github.io/generational-cache/docs/generational_cache/) for more details.
+Refer to latest git [API Documentation](https://arindas.github.io/generational-cache/docs/generational_cache/)
+or [Crate Documentation](https://docs.rs/generational-cache) for more details.
 
 ### Examples
 
