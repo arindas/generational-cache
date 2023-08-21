@@ -440,7 +440,7 @@
 <span class="doccomment">/// Alias representing block entries for storage in a generational arena.
 </span><span class="kw">pub type </span>LRUCacheBlockArenaEntry&lt;K, T&gt; = LinkedListArenaEntry&lt;Block&lt;K, T&gt;&gt;;
 
-<span class="doccomment">/// A generational-cache powered LRUCache implementation.
+<span class="doccomment">/// A [generational-arena](crate::arena::Arena) powered LRUCache implementation.
 </span><span class="kw">pub struct </span>LRUCache&lt;V, K, T, M&gt; {
     block_list: LinkedList&lt;V, Block&lt;K, T&gt;&gt;,
     block_refs: M,
