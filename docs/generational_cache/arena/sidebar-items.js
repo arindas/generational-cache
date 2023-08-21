@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ArenaError","Entry"],"struct":["Arena","Index"]};
