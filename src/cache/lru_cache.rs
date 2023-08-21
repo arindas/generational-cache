@@ -260,6 +260,8 @@ pub mod tests {
 
         let mut cache = LRUCache::<_, _, _, M>::with_backing_vector(zero_capacity_vec);
 
+        assert!(cache.is_empty());
+
         match cache.insert(0, 0) {
             Err(LRUCacheError::ListUnderflow) => {}
             _ => unreachable!("Wrong error on list underflow."),
@@ -274,6 +276,8 @@ pub mod tests {
             "Too small capacity: {} to run meaningful tests.",
             capacity
         );
+
+        assert!(cache.is_empty());
 
         for i in 0..cache.capacity() {
             assert_eq!(cache.insert(i, i).unwrap(), Eviction::None);
@@ -319,5 +323,19 @@ pub mod tests {
         );
 
         assert_eq!(cache.most_recent().unwrap(), (&capacity, &(capacity + 2)));
+
+        cache.clear();
+
+        assert!(cache.is_empty());
+
+        for i in 0..cache.capacity() {
+            assert_eq!(cache.insert(i, i).unwrap(), Eviction::None);
+        }
+
+        assert_eq!(cache.least_recent().unwrap(), (&0, &0));
+
+        cache.clear();
+
+        assert!(cache.is_empty());
     }
 }
