@@ -1,7 +1,6 @@
-use super::{Cache, Eviction};
 use crate::{
-    arena::{Arena, Entry},
-    collections::list::{Link, LinkedList, ListError, Node},
+    cache::{Cache, Eviction},
+    collections::list::{Link, LinkedList, LinkedListArenaEntry, ListError},
     map::Map,
     vector::Vector,
 };
@@ -15,7 +14,7 @@ pub struct Block<K, T> {
     pub value: T,
 }
 
-pub type CacheBlockArenaEntry<K, T> = Entry<Node<Block<K, T>>>;
+pub type CacheBlockArenaEntry<K, T> = LinkedListArenaEntry<Block<K, T>>;
 
 pub type BlockList<V, K, T> = LinkedList<V, Block<K, T>>;
 
@@ -29,13 +28,7 @@ where
     V: Vector<CacheBlockArenaEntry<K, T>>,
     M: Map<K, Link>,
 {
-    pub fn with_block_list_and_block_refs(
-        mut block_list: BlockList<V, K, T>,
-        mut block_refs: M,
-    ) -> Self {
-        block_list.clear();
-        block_refs.clear();
-
+    fn with_block_list_and_block_refs(block_list: BlockList<V, K, T>, block_refs: M) -> Self {
         Self {
             block_list,
             block_refs,
@@ -58,10 +51,6 @@ where
     V: Vector<CacheBlockArenaEntry<K, T>>,
     M: Map<K, Link>,
 {
-    pub fn with_backing_arena_and_map(arena: Arena<V, Node<Block<K, T>>>, map: M) -> Self {
-        Self::with_block_list_and_block_refs(LinkedList::with_backing_arena(arena), map)
-    }
-
     pub fn with_backing_vector_and_map(vector: V, map: M) -> Self {
         let block_list = LinkedList::with_backing_vector(vector);
         Self::with_block_list_and_block_refs(block_list, map)
@@ -70,7 +59,7 @@ where
 
 impl<V, K, T, M> LRUCache<V, K, T, M>
 where
-    V: Vector<Entry<Node<Block<K, T>>>>,
+    V: Vector<CacheBlockArenaEntry<K, T>>,
     M: Map<K, Link> + Default,
 {
     pub fn with_backing_vector(vector: V) -> Self {
@@ -189,40 +178,28 @@ where
 #[doc(hidden)]
 pub mod tests {
 
-    use super::{
-        super::super::arena::Arena, Cache, CacheBlockArenaEntry, CacheError, Eviction, LRUCache,
-        Link, LinkedList, Map, Vector,
-    };
+    use super::{Cache, CacheBlockArenaEntry, CacheError, Eviction, LRUCache, Link, Map, Vector};
 
-    pub fn _test_cache_correctness<VX, VY, M>(
-        zero_capacity_vec_provider: impl Fn() -> VX,
-        vec_provider: impl Fn() -> VY,
-    ) where
+    pub fn _test_cache_correctness<VX, VY, M>(zero_capacity_vec: VX, test_vec: VY)
+    where
         VX: Vector<CacheBlockArenaEntry<usize, usize>>,
         VY: Vector<CacheBlockArenaEntry<usize, usize>>,
         M: Map<usize, Link> + Default,
     {
-        let zero_capacity_vec = zero_capacity_vec_provider();
         assert_eq!(
             zero_capacity_vec.capacity(),
             0,
             "Zero capacity vector provider yielded vector of non zero capacity."
         );
 
-        let mut cache = LRUCache::with_block_list_and_block_refs(
-            LinkedList::with_backing_arena(Arena::with_vector(zero_capacity_vec)),
-            M::default(),
-        );
+        let mut cache = LRUCache::<_, _, _, M>::with_backing_vector(zero_capacity_vec);
 
         match cache.insert(0, 0) {
             Err(CacheError::ListUnderflow) => {}
             _ => unreachable!("Wrong error on list underflow."),
         };
 
-        let mut cache = LRUCache::with_block_list_and_block_refs(
-            LinkedList::with_backing_arena(Arena::with_vector(vec_provider())),
-            M::default(),
-        );
+        let mut cache = LRUCache::<_, _, _, M>::with_backing_vector(test_vec);
 
         let capacity = cache.capacity();
 

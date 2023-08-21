@@ -1,7 +1,7 @@
 use core::marker::Copy;
 use generational_cache::{
     arena::{self, Arena, Entry},
-    collections::list::{self, LinkedList, Node},
+    collections::list::{self, LinkedList, LinkedListArenaEntry},
     vector::{self, impls::array::Array},
 };
 
@@ -11,14 +11,14 @@ pub fn array_backed_arena<T, const N: usize>() -> Arena<Array<Entry<T>, N>, T>
 where
     T: Copy + Default,
 {
-    Arena::with_vector(Array::<Entry<T>, N>::new())
+    Arena::with_vector(Array::new())
 }
 
-pub fn array_backed_list<T, const N: usize>() -> LinkedList<Array<Entry<Node<T>>, N>, T>
+pub fn array_backed_list<T, const N: usize>() -> LinkedList<Array<LinkedListArenaEntry<T>, N>, T>
 where
     T: Copy + Default,
 {
-    LinkedList::with_backing_arena(array_backed_arena())
+    LinkedList::with_backing_vector(Array::new())
 }
 
 #[test]

@@ -1,17 +1,19 @@
 use generational_cache::{
     arena::{self, Arena, Entry},
-    collections::list::{self, LinkedList, Node},
+    collections::list::{self, LinkedList, LinkedListArenaEntry},
     vector::{self, impls::alloc_vec::AllocVec},
 };
 
 const TEST_CAPACITY: usize = 1 << 4;
 
 pub fn alloc_vec_backed_arena<T>(capacity: usize) -> Arena<AllocVec<Entry<T>>, T> {
-    Arena::with_vector(AllocVec::<Entry<T>>::with_capacity(capacity))
+    Arena::with_vector(AllocVec::with_capacity(capacity))
 }
 
-pub fn alloc_vec_backed_list<T>(capacity: usize) -> LinkedList<AllocVec<Entry<Node<T>>>, T> {
-    LinkedList::with_backing_arena(alloc_vec_backed_arena(capacity))
+pub fn alloc_vec_backed_list<T>(
+    capacity: usize,
+) -> LinkedList<AllocVec<LinkedListArenaEntry<T>>, T> {
+    LinkedList::with_backing_vector(AllocVec::with_capacity(capacity))
 }
 
 #[test]

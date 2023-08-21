@@ -14,15 +14,15 @@ fn test_alloc_btree_map_consistency() {
 #[test]
 fn test_alloc_btree_alloc_vec_backed_lru_cache_consistency() {
     lru_cache::tests::_test_cache_correctness::<_, _, AllocBTreeMap<_, _>>(
-        || AllocVec::with_capacity(0),
-        || AllocVec::with_capacity(TEST_CAPACITY),
+        AllocVec::with_capacity(0),
+        AllocVec::with_capacity(TEST_CAPACITY),
     );
 }
 
 #[test]
 fn test_alloc_btree_array_vec_backed_lru_cache_consistency() {
     lru_cache::tests::_test_cache_correctness::<_, _, AllocBTreeMap<_, _>>(
-        || Array::<CacheBlockArenaEntry<usize, usize>, 0>::new(),
-        || Array::<CacheBlockArenaEntry<usize, usize>, TEST_CAPACITY>::new(),
+        Array::<CacheBlockArenaEntry<usize, usize>, 0>::new(),
+        Array::<CacheBlockArenaEntry<usize, usize>, TEST_CAPACITY>::new(),
     );
 }

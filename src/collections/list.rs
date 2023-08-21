@@ -65,21 +65,12 @@ impl Display for ListError {
     }
 }
 
+pub type LinkedListArenaEntry<T> = Entry<Node<T>>;
+
 impl<V, T> LinkedList<V, T>
 where
     V: Vector<Entry<Node<T>>>,
 {
-    pub fn with_backing_arena(mut arena: Arena<V, Node<T>>) -> Self {
-        arena.clear();
-
-        Self {
-            backing_arena: arena,
-            head: None,
-            tail: None,
-            len: 0,
-        }
-    }
-
     pub fn with_backing_vector(vector: V) -> Self {
         Self {
             backing_arena: Arena::with_vector(vector),
@@ -292,7 +283,7 @@ where
     V: Default + Vector<Entry<Node<T>>>,
 {
     fn default() -> Self {
-        Self::with_backing_arena(Arena::with_vector(V::default()))
+        Self::with_backing_vector(V::default())
     }
 }
 
