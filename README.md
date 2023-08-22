@@ -27,7 +27,7 @@ Generational Arena based cache impls. in 100% safe, [no_std] compatible Rust.
 
 ```toml
 [dependencies]
-generational-cache = "0.1.0"
+generational-cache = "0.1.1"
 ```
 
 Refer to latest git [API Documentation](https://arindas.github.io/generational-cache/docs/generational_cache/)
@@ -98,4 +98,6 @@ match cache.insert(0, 0) {
 (… we plan on adding more cache implementations in the future).
 
 ## License
-This repository is licensed under the MIT License. See [LICENSE](./LICENSE) for more details.
+This repository is licensed under the MIT License. See
+[License](https://raw.githubusercontent.com/arindas/generational-cache/main/LICENSE)
+for more details.
