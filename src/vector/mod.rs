@@ -43,10 +43,17 @@ pub mod tests {
         if cap_0 == cap_1 {
             assert!(res.is_err());
         } else {
+            assert!(cap_1 > cap_0, "Capacity decreased on push().");
             assert!(res.is_ok());
         }
 
+        let cap_0 = vector.capacity();
+
         vector.clear();
+
+        let cap_1 = vector.capacity();
+
+        assert!(cap_0 == cap_1, "Capacity changed on clear().");
 
         assert!(vector.is_empty());
     }

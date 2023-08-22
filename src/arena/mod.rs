@@ -54,12 +54,34 @@ impl<T> Default for Entry<T> {
 ///
 /// This is inspired from the crate
 /// ["generational-arena"](https://docs.rs/generational-arena)
+///
+/// ## Usage
+/// ```
+/// #[no_std]
+///
+/// use generational_cache::prelude::*;
+///
+/// const CAPACITY: usize = 5;
+///
+/// let mut arena = Arena::<_, i32>::with_vector(Array::<_, CAPACITY>::new());
+/// let index = arena.insert(78).unwrap(); // allocate new element in arena
+/// let i_ref = arena.get(&index);
+/// assert_eq!(i_ref, Some(&78));
+/// let i_m_ref = arena.get_mut(&index).unwrap();
+/// *i_m_ref = -68418;
+/// assert_eq!(arena.get(&index), Some(&-68418));
+///
+/// arena.remove(&index).unwrap();
+///
+/// assert!(arena.get(&index).is_none());
+/// ```
 pub struct Arena<V, T> {
     entries_vec: V,
     generation: u64,
     free_list_head: Option<usize>,
 
     len: usize,
+    capacity: usize,
 
     _phantom_type: PhantomData<T>,
 }
@@ -92,7 +114,7 @@ where
 
         self.entries_vec.clear();
 
-        let capacity = self.entries_vec.capacity();
+        let capacity = self.capacity();
 
         for i in 0..capacity {
             let next_free_idx = i + 1;
@@ -112,11 +134,14 @@ where
     }
 
     pub fn with_vector(vector: V) -> Self {
+        let capacity = vector.capacity();
+
         let mut arena = Self {
             entries_vec: vector,
             generation: 0,
             free_list_head: Some(0),
             len: 0,
+            capacity,
             _phantom_type: PhantomData,
         };
 
@@ -207,7 +232,7 @@ where
     }
 
     pub fn capacity(&self) -> usize {
-        self.entries_vec.capacity()
+        self.capacity
     }
 
     pub fn is_empty(&self) -> bool {

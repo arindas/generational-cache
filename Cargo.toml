@@ -6,7 +6,7 @@ license = "MIT"
 keywords = ["cache", "lru-cache", "generational-arena", "no-std"]
 categories = ["algorithms", "caching"]
 exclude = [".github/"]
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
