@@ -63,15 +63,8 @@ assert_eq!(cache.insert(-2, 42).unwrap(), Eviction::Value(2));
 assert_eq!(cache.least_recent().unwrap(), (&-3, &3));
 assert_eq!(cache.most_recent().unwrap(), (&-2, &42));
 
-match cache.remove(&-42) {
-  Ok(Lookup::Miss) => {},
-  _ => unreachable!("Wrong result on cache miss"),
-};
-
-match cache.query(&-42) {
-  Ok(Lookup::Miss) => {},
-  _ => unreachable!("Wrong result on cache miss"),
-};
+assert_eq!(cache.remove(&-42).unwrap(), Lookup::Miss);
+assert_eq!(cache.query(&-42).unwrap(), Lookup::Miss);
 
 assert_eq!(cache.query(&-3).unwrap(), Lookup::Hit(&3));
 
@@ -80,10 +73,7 @@ assert_eq!(cache.most_recent().unwrap(), (&-3, &3));
 
 assert_eq!(cache.remove(&-2).unwrap(), Lookup::Hit(42));
 
-match cache.query(&-2) {
-  Ok(Lookup::Miss) => {},
-  _ => unreachable!("Wrong result on cache miss"),
-};
+assert_eq!(cache.query(&-2).unwrap(), Lookup::Miss);
 
 // zero capacity LRUCache is unusable
 let mut cache = LRUCache::<_, i32, u64, AllocBTreeMap<_, _>>::with_backing_vector(Array::<_, 0_usize>::new());

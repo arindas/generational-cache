@@ -35,7 +35,7 @@ pub mod tests {
         assert!(vector.is_empty());
 
         for i in 0..vector.capacity() {
-            assert!(matches!(vector.push(i), Ok(_)));
+            vector.push(i).unwrap();
         }
 
         assert_eq!(vector.len(), vector.capacity());
@@ -76,7 +76,7 @@ pub mod tests {
         }
 
         for i in 0..ADDITIONAL {
-            assert!(matches!(vector.push(i), Ok(_)));
+            vector.push(i).unwrap();
         }
     }
 }

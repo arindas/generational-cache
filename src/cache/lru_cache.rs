@@ -26,15 +26,8 @@
 //! assert_eq!(cache.least_recent().unwrap(), (&-3, &3));
 //! assert_eq!(cache.most_recent().unwrap(), (&-2, &42));
 //!
-//! match cache.remove(&-42) {
-//!   Ok(Lookup::Miss) => {},
-//!   _ => unreachable!("Wrong result on cache miss"),
-//! };
-//!
-//! match cache.query(&-42) {
-//!   Ok(Lookup::Miss) => {},
-//!   _ => unreachable!("Wrong result on cache miss"),
-//! };
+//! assert_eq!(cache.remove(&-42).unwrap(), Lookup::Miss);
+//! assert_eq!(cache.query(&-42).unwrap(), Lookup::Miss);
 //!
 //! assert_eq!(cache.query(&-3).unwrap(), Lookup::Hit(&3));
 //!
@@ -43,10 +36,7 @@
 //!
 //! assert_eq!(cache.remove(&-2).unwrap(), Lookup::Hit(42));
 //!
-//! match cache.query(&-2) {
-//!   Ok(Lookup::Miss) => {},
-//!   _ => unreachable!("Wrong result on cache miss"),
-//! };
+//! assert_eq!(cache.query(&-2).unwrap(), Lookup::Miss);
 //!
 //! // zero capacity LRUCache is unusable
 //! let mut cache = LRUCache::<_, i32, u64, AllocBTreeMap<_, _>>::with_backing_vector(Array::<_, 0_usize>::new());
@@ -343,15 +333,8 @@ pub mod tests {
         assert_eq!(cache.least_recent().unwrap(), (&2, &2));
         assert_eq!(cache.most_recent().unwrap(), (&1, &1));
 
-        match cache.remove(&(capacity + 1)) {
-            Ok(Lookup::Miss) => {}
-            _ => unreachable!("Wrong result on cache miss"),
-        };
-
-        match cache.query(&(capacity + 1)) {
-            Ok(Lookup::Miss) => {}
-            _ => unreachable!("Wrong result on cache miss"),
-        };
+        assert_eq!(cache.remove(&(capacity + 1)).unwrap(), Lookup::Miss);
+        assert_eq!(cache.query(&(capacity + 1)).unwrap(), Lookup::Miss);
 
         assert_eq!(
             cache.insert(capacity + 1, capacity + 1).unwrap(),
@@ -363,10 +346,8 @@ pub mod tests {
             Lookup::Hit(capacity + 1)
         );
 
-        match cache.query(&(capacity + 1)) {
-            Ok(Lookup::Miss) => {}
-            _ => unreachable!("Wrong result on cache miss"),
-        };
+        assert_eq!(cache.remove(&(capacity + 1)).unwrap(), Lookup::Miss);
+        assert_eq!(cache.query(&(capacity + 1)).unwrap(), Lookup::Miss);
 
         assert_eq!(
             cache.insert(capacity, capacity + 2).unwrap(),
