@@ -107,6 +107,36 @@ impl<V, T> Arena<V, T>
 where
     V: Vector<Entry<T>>,
 {
+    pub fn reserve(&mut self, additional: usize) -> Result<(), ArenaError<V::Error>> {
+        let reserve_start = self.entries_vec.len();
+        let old_head = self.free_list_head;
+
+        self.entries_vec
+            .reserve(additional)
+            .map_err(ArenaError::VectorError)?;
+
+        for i in 0..additional {
+            let free_idx = i + reserve_start;
+
+            let next_free_idx = if i < additional - 1 {
+                Some(free_idx + 1)
+            } else {
+                old_head
+            };
+
+            let free_entry = Entry::Free { next_free_idx };
+            self.entries_vec
+                .push(free_entry)
+                .map_err(ArenaError::VectorError)?;
+        }
+
+        self.free_list_head = Some(reserve_start);
+
+        self.capacity += additional;
+
+        Ok(())
+    }
+
     pub fn clear(&mut self) -> Result<(), ArenaError<V::Error>> {
         self.free_list_head = Some(0);
         self.generation = 0;
@@ -281,6 +311,55 @@ pub mod tests {
         }
     }
 
+    pub fn _test_arena_reserve<T, V>(mut arena: Arena<V, T>)
+    where
+        V: Vector<Entry<T>>,
+        T: Debug + PartialEq,
+    {
+        arena.clear().unwrap();
+
+        let old_capacity = arena.capacity();
+
+        const ADDITIONAL: usize = 5;
+
+        let result = arena.reserve(ADDITIONAL);
+
+        if result.is_err() {
+            return;
+        }
+
+        assert_eq!(arena.free_list_head, Some(old_capacity));
+
+        let capacity = arena.capacity();
+
+        for i in 0..capacity {
+            let entry = &arena.entries_vec[i];
+
+            if i == capacity - 1 {
+                assert_eq!(
+                    entry,
+                    &Entry::Free {
+                        next_free_idx: Some(0)
+                    }
+                )
+            } else if i == old_capacity - 1 {
+                assert_eq!(
+                    entry,
+                    &Entry::Free {
+                        next_free_idx: None
+                    }
+                )
+            } else {
+                assert_eq!(
+                    entry,
+                    &Entry::Free {
+                        next_free_idx: Some(i + 1)
+                    }
+                )
+            };
+        }
+    }
+
     pub fn _test_arena_insert<V>(mut arena: Arena<V, i32>)
     where
         V: Vector<Entry<i32>>,
@@ -348,6 +427,16 @@ pub mod tests {
                     idx: possible_idx
                 }
             )
+        }
+
+        const ADDITIONAL: usize = 5;
+
+        let result = arena.reserve(ADDITIONAL);
+
+        if result.is_ok() {
+            for _ in 0..ADDITIONAL {
+                arena.insert(0).unwrap();
+            }
         }
 
         arena.clear().unwrap();

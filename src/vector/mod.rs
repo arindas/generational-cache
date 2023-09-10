@@ -6,6 +6,8 @@ use core::ops::DerefMut;
 pub trait Vector<T>: DerefMut<Target = [T]> {
     type Error: core::fmt::Debug;
 
+    fn reserve(&mut self, additional: usize) -> Result<(), Self::Error>;
+
     fn capacity(&self) -> usize;
 
     fn push(&mut self, item: T) -> Result<(), Self::Error>;
@@ -21,6 +23,14 @@ pub mod tests {
 
     pub fn _test_vector_consistency<V: Vector<usize>>(mut vector: V) {
         vector.clear();
+
+        let cap_0 = vector.capacity();
+
+        vector.reserve(vector.capacity()).unwrap();
+
+        let cap_1 = vector.capacity();
+
+        assert_eq!(cap_0, cap_1);
 
         assert!(vector.is_empty());
 
@@ -56,5 +66,17 @@ pub mod tests {
         assert!(cap_0 == cap_1, "Capacity changed on clear().");
 
         assert!(vector.is_empty());
+
+        const ADDITIONAL: usize = 5;
+
+        let result = vector.reserve(ADDITIONAL);
+
+        if result.is_err() {
+            return;
+        }
+
+        for i in 0..ADDITIONAL {
+            assert!(matches!(vector.push(i), Ok(_)));
+        }
     }
 }

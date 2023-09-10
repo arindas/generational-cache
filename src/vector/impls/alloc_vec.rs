@@ -49,6 +49,11 @@ impl<T> Deref for AllocVec<T> {
 impl<T> Vector<T> for AllocVec<T> {
     type Error = Infallible;
 
+    fn reserve(&mut self, additional: usize) -> Result<(), Self::Error> {
+        self.vec.reserve_exact(additional);
+        Ok(())
+    }
+
     fn capacity(&self) -> usize {
         self.vec.capacity()
     }

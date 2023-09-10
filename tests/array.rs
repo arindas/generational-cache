@@ -18,7 +18,7 @@ pub fn array_backed_list<T, const N: usize>() -> LinkedList<Array<LinkedListAren
 where
     T: Copy + Default,
 {
-    LinkedList::with_backing_vector(Array::new())
+    LinkedList::default()
 }
 
 #[test]

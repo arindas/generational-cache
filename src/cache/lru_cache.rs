@@ -85,6 +85,8 @@ pub type LRUCacheBlockArenaEntry<K, T> = LinkedListArenaEntry<Block<K, T>>;
 pub struct LRUCache<V, K, T, M> {
     block_list: LinkedList<V, Block<K, T>>,
     block_refs: M,
+
+    capacity: usize,
 }
 
 impl<V, K, T, M> LRUCache<V, K, T, M>
@@ -92,16 +94,6 @@ where
     V: Vector<LRUCacheBlockArenaEntry<K, T>>,
     M: Map<K, Link>,
 {
-    fn with_block_list_and_block_refs(
-        block_list: LinkedList<V, Block<K, T>>,
-        block_refs: M,
-    ) -> Self {
-        Self {
-            block_list,
-            block_refs,
-        }
-    }
-
     pub fn least_recent(&self) -> Option<(&K, &T)> {
         let block = self.block_list.peek_front()?;
         Some((&block.key, &block.value))
@@ -120,7 +112,13 @@ where
 {
     pub fn with_backing_vector_and_map(vector: V, map: M) -> Self {
         let block_list = LinkedList::with_backing_vector(vector);
-        Self::with_block_list_and_block_refs(block_list, map)
+        let capacity = block_list.capacity();
+
+        Self {
+            block_list,
+            block_refs: map,
+            capacity,
+        }
     }
 }
 
@@ -222,6 +220,35 @@ where
         Ok(block.value)
     }
 
+    fn shrink(&mut self, new_capacity: usize) -> Result<(), Self::Error> {
+        if new_capacity >= self.capacity() {
+            return Ok(());
+        }
+
+        while self.len() > new_capacity {
+            let Block { key, value } = self
+                .block_list
+                .pop_front()
+                .ok_or(Self::Error::ListUnderflow)?;
+
+            self.block_refs.remove(&key);
+        }
+
+        self.capacity = new_capacity;
+
+        Ok(())
+    }
+
+    fn reserve(&mut self, additional: usize) -> Result<(), Self::Error> {
+        self.block_list
+            .reserve(additional)
+            .map_err(Self::Error::ListError)?;
+
+        self.capacity += additional;
+
+        Ok(())
+    }
+
     fn query(&mut self, key: &K) -> Result<&T, Self::Error> {
         let link = self.block_refs.get(key).ok_or(Self::Error::CacheMiss)?;
 
@@ -238,7 +265,7 @@ where
     }
 
     fn capacity(&self) -> usize {
-        self.block_list.capacity()
+        self.capacity
     }
 
     fn len(&self) -> usize {
@@ -351,6 +378,39 @@ pub mod tests {
         }
 
         assert_eq!(cache.least_recent().unwrap(), (&0, &0));
+
+        const ADDITIONAL: usize = 5;
+
+        let result = cache.reserve(ADDITIONAL);
+
+        if result.is_ok() {
+            let old_len = cache.len();
+            for i in 0..ADDITIONAL {
+                assert_eq!(cache.insert(i + old_len, i).unwrap(), Eviction::None);
+            }
+        }
+
+        let old_capacity = cache.capacity();
+
+        cache.shrink(0).unwrap();
+
+        assert!(cache.is_maxed());
+
+        match cache.insert(0, 0) {
+            Err(LRUCacheError::ListUnderflow) => {}
+            _ => unreachable!("Wrong error on list underflow."),
+        };
+
+        assert!(cache.is_empty());
+
+        cache.reserve(old_capacity).unwrap();
+        cache.shrink(old_capacity).unwrap();
+
+        assert_eq!(cache.capacity(), old_capacity);
+
+        for i in 0..cache.capacity() {
+            assert_eq!(cache.insert(i, i).unwrap(), Eviction::None);
+        }
 
         cache.clear().unwrap();
 

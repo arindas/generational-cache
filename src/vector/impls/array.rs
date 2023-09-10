@@ -58,6 +58,16 @@ pub enum ArrayError {
 impl<T, const N: usize> Vector<T> for Array<T, N> {
     type Error = ArrayError;
 
+    fn reserve(&mut self, additional: usize) -> Result<(), Self::Error> {
+        let remaining = self.capacity() - self.len();
+
+        if additional > remaining {
+            Err(ArrayError::OutOfMemory)
+        } else {
+            Ok(())
+        }
+    }
+
     fn capacity(&self) -> usize {
         N
     }

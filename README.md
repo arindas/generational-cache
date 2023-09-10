@@ -27,7 +27,7 @@ Generational Arena based cache impls. in 100% safe, [no_std] compatible Rust.
 
 ```toml
 [dependencies]
-generational-cache = "0.1.1"
+generational-cache = "0.1.2"
 ```
 
 Refer to latest git [API Documentation](https://arindas.github.io/generational-cache/docs/generational_cache/)
