@@ -64,25 +64,25 @@ assert_eq!(cache.least_recent().unwrap(), (&-3, &3));
 assert_eq!(cache.most_recent().unwrap(), (&-2, &42));
 
 match cache.remove(&-42) {
-  Err(LRUCacheError::CacheMiss) => {},
-  _ => unreachable!("Wrong error on cache miss"),
+  Ok(Lookup::Miss) => {},
+  _ => unreachable!("Wrong result on cache miss"),
 };
 
 match cache.query(&-42) {
-  Err(LRUCacheError::CacheMiss) => {},
-  _ => unreachable!("Wrong error on cache miss"),
+  Ok(Lookup::Miss) => {},
+  _ => unreachable!("Wrong result on cache miss"),
 };
 
-assert_eq!(cache.query(&-3).unwrap(), &3);
+assert_eq!(cache.query(&-3).unwrap(), Lookup::Hit(&3));
 
 assert_eq!(cache.least_recent().unwrap(), (&-4, &4));
 assert_eq!(cache.most_recent().unwrap(), (&-3, &3));
 
-assert_eq!(cache.remove(&-2).unwrap(), 42);
+assert_eq!(cache.remove(&-2).unwrap(), Lookup::Hit(42));
 
 match cache.query(&-2) {
-  Err(LRUCacheError::CacheMiss) => {},
-  _ => unreachable!("Wrong error on cache miss"),
+  Ok(Lookup::Miss) => {},
+  _ => unreachable!("Wrong result on cache miss"),
 };
 
 // zero capacity LRUCache is unusable
