@@ -96,6 +96,18 @@ where
         Ok(())
     }
 
+    pub fn reserve(&mut self, additional: usize) -> Result<(), ListError<V::Error>> {
+        let remaining = self.capacity() - self.len();
+
+        if remaining >= additional {
+            return Ok(());
+        }
+
+        self.backing_arena
+            .reserve(additional)
+            .map_err(ListError::ArenaError)
+    }
+
     pub fn capacity(&self) -> usize {
         self.backing_arena.capacity()
     }
@@ -378,6 +390,24 @@ pub mod tests {
             Err(ListError::ArenaError(ArenaError::OutOfMemory)) => {}
             _ => unreachable!("Out of memory not triggered"),
         };
+
+        const ADDITIONAL: usize = 5;
+
+        let result = list.reserve(ADDITIONAL);
+
+        for _ in 0..ADDITIONAL {
+            if result.is_ok() {
+                list.push_front(T::default()).unwrap();
+            }
+        }
+
+        let result = list.reserve(ADDITIONAL);
+
+        for _ in 0..ADDITIONAL {
+            if result.is_ok() {
+                list.push_front(T::default()).unwrap();
+            }
+        }
 
         list.clear().unwrap();
 

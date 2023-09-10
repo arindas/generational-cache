@@ -16,6 +16,10 @@ pub trait Cache<K, V> {
 
     fn remove(&mut self, key: &K) -> Result<V, Self::Error>;
 
+    fn shrink(&mut self, new_capacity: usize) -> Result<(), Self::Error>;
+
+    fn reserve(&mut self, additional: usize) -> Result<(), Self::Error>;
+
     fn query(&mut self, key: &K) -> Result<&V, Self::Error>;
 
     fn capacity(&self) -> usize;

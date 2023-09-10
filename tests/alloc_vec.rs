@@ -27,6 +27,11 @@ fn test_alloc_vec_arena_free_entries_init() {
 }
 
 #[test]
+fn test_alloc_vec_arena_reserve() {
+    arena::tests::_test_arena_reserve(alloc_vec_backed_arena::<()>(TEST_CAPACITY));
+}
+
+#[test]
 fn test_alloc_vec_arena_insert() {
     arena::tests::_test_arena_insert(alloc_vec_backed_arena::<i32>(TEST_CAPACITY));
 }
