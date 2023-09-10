@@ -27,7 +27,7 @@ Generational Arena based cache impls. in 100% safe, [no_std] compatible Rust.
 
 ```toml
 [dependencies]
-generational-cache = "0.1.2"
+generational-cache = "0.2.0"
 ```
 
 Refer to latest git [API Documentation](https://arindas.github.io/generational-cache/docs/generational_cache/)
@@ -63,27 +63,17 @@ assert_eq!(cache.insert(-2, 42).unwrap(), Eviction::Value(2));
 assert_eq!(cache.least_recent().unwrap(), (&-3, &3));
 assert_eq!(cache.most_recent().unwrap(), (&-2, &42));
 
-match cache.remove(&-42) {
-  Err(LRUCacheError::CacheMiss) => {},
-  _ => unreachable!("Wrong error on cache miss"),
-};
+assert_eq!(cache.remove(&-42).unwrap(), Lookup::Miss);
+assert_eq!(cache.query(&-42).unwrap(), Lookup::Miss);
 
-match cache.query(&-42) {
-  Err(LRUCacheError::CacheMiss) => {},
-  _ => unreachable!("Wrong error on cache miss"),
-};
-
-assert_eq!(cache.query(&-3).unwrap(), &3);
+assert_eq!(cache.query(&-3).unwrap(), Lookup::Hit(&3));
 
 assert_eq!(cache.least_recent().unwrap(), (&-4, &4));
 assert_eq!(cache.most_recent().unwrap(), (&-3, &3));
 
-assert_eq!(cache.remove(&-2).unwrap(), 42);
+assert_eq!(cache.remove(&-2).unwrap(), Lookup::Hit(42));
 
-match cache.query(&-2) {
-  Err(LRUCacheError::CacheMiss) => {},
-  _ => unreachable!("Wrong error on cache miss"),
-};
+assert_eq!(cache.query(&-2).unwrap(), Lookup::Miss);
 
 // zero capacity LRUCache is unusable
 let mut cache = LRUCache::<_, i32, u64, AllocBTreeMap<_, _>>::with_backing_vector(Array::<_, 0_usize>::new());

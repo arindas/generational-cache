@@ -26,27 +26,17 @@
 //! assert_eq!(cache.least_recent().unwrap(), (&-3, &3));
 //! assert_eq!(cache.most_recent().unwrap(), (&-2, &42));
 //!
-//! match cache.remove(&-42) {
-//!   Err(LRUCacheError::CacheMiss) => {},
-//!   _ => unreachable!("Wrong error on cache miss"),
-//! };
+//! assert_eq!(cache.remove(&-42).unwrap(), Lookup::Miss);
+//! assert_eq!(cache.query(&-42).unwrap(), Lookup::Miss);
 //!
-//! match cache.query(&-42) {
-//!   Err(LRUCacheError::CacheMiss) => {},
-//!   _ => unreachable!("Wrong error on cache miss"),
-//! };
-//!
-//! assert_eq!(cache.query(&-3).unwrap(), &3);
+//! assert_eq!(cache.query(&-3).unwrap(), Lookup::Hit(&3));
 //!
 //! assert_eq!(cache.least_recent().unwrap(), (&-4, &4));
 //! assert_eq!(cache.most_recent().unwrap(), (&-3, &3));
 //!
-//! assert_eq!(cache.remove(&-2).unwrap(), 42);
+//! assert_eq!(cache.remove(&-2).unwrap(), Lookup::Hit(42));
 //!
-//! match cache.query(&-2) {
-//!   Err(LRUCacheError::CacheMiss) => {},
-//!   _ => unreachable!("Wrong error on cache miss"),
-//! };
+//! assert_eq!(cache.query(&-2).unwrap(), Lookup::Miss);
 //!
 //! // zero capacity LRUCache is unusable
 //! let mut cache = LRUCache::<_, i32, u64, AllocBTreeMap<_, _>>::with_backing_vector(Array::<_, 0_usize>::new());
@@ -68,6 +58,8 @@ use core::{
     fmt::{Debug, Display},
     mem,
 };
+
+use super::Lookup;
 
 extern crate alloc;
 
@@ -148,7 +140,6 @@ pub enum LRUCacheError<VE, ME> {
     ListUnderflow,
     MapListInconsistent,
     MapError(ME),
-    CacheMiss,
 }
 
 impl<VE, ME> Display for LRUCacheError<VE, ME>
@@ -209,15 +200,15 @@ where
         Ok(eviction)
     }
 
-    fn remove(&mut self, key: &K) -> Result<T, Self::Error> {
-        let link = self.block_refs.remove(key).ok_or(Self::Error::CacheMiss)?;
-
-        let block = self
-            .block_list
-            .remove(&link)
-            .ok_or(Self::Error::MapListInconsistent)?;
-
-        Ok(block.value)
+    fn remove(&mut self, key: &K) -> Result<Lookup<T>, Self::Error> {
+        match self.block_refs.remove(key) {
+            Some(link) => self
+                .block_list
+                .remove(&link)
+                .map(|x| Lookup::Hit(x.value))
+                .ok_or(Self::Error::MapListInconsistent),
+            _ => Ok(Lookup::Miss),
+        }
     }
 
     fn shrink(&mut self, new_capacity: usize) -> Result<(), Self::Error> {
@@ -249,19 +240,20 @@ where
         Ok(())
     }
 
-    fn query(&mut self, key: &K) -> Result<&T, Self::Error> {
-        let link = self.block_refs.get(key).ok_or(Self::Error::CacheMiss)?;
+    fn query(&mut self, key: &K) -> Result<Lookup<&T>, Self::Error> {
+        match self.block_refs.get(key) {
+            Some(link) => {
+                self.block_list
+                    .shift_push_back(link)
+                    .ok_or(Self::Error::MapListInconsistent)?;
 
-        self.block_list
-            .shift_push_back(link)
-            .ok_or(Self::Error::MapListInconsistent)?;
-
-        let block = self
-            .block_list
-            .get(link)
-            .ok_or(Self::Error::MapListInconsistent)?;
-
-        Ok(&block.value)
+                self.block_list
+                    .get(link)
+                    .map(|x| Lookup::Hit(&x.value))
+                    .ok_or(Self::Error::MapListInconsistent)
+            }
+            _ => Ok(Lookup::Miss),
+        }
     }
 
     fn capacity(&self) -> usize {
@@ -288,7 +280,8 @@ where
 pub mod tests {
 
     use super::{
-        Cache, Eviction, LRUCache, LRUCacheBlockArenaEntry, LRUCacheError, Link, Map, Vector,
+        Cache, Eviction, LRUCache, LRUCacheBlockArenaEntry, LRUCacheError, Link, Lookup, Map,
+        Vector,
     };
 
     pub fn _test_cache_correctness<VX, VY, M>(zero_capacity_vec: VX, test_vec: VY)
@@ -335,32 +328,26 @@ pub mod tests {
             Eviction::Block { key: 0, value: 0 }
         );
 
-        assert_eq!(cache.query(&1).unwrap(), &1);
+        assert_eq!(cache.query(&1).unwrap(), Lookup::Hit(&1));
 
         assert_eq!(cache.least_recent().unwrap(), (&2, &2));
         assert_eq!(cache.most_recent().unwrap(), (&1, &1));
 
-        match cache.remove(&(capacity + 1)) {
-            Err(LRUCacheError::CacheMiss) => {}
-            _ => unreachable!("Wrong error on cache miss"),
-        };
-
-        match cache.query(&(capacity + 1)) {
-            Err(LRUCacheError::CacheMiss) => {}
-            _ => unreachable!("Wrong error on cache miss"),
-        };
+        assert_eq!(cache.remove(&(capacity + 1)).unwrap(), Lookup::Miss);
+        assert_eq!(cache.query(&(capacity + 1)).unwrap(), Lookup::Miss);
 
         assert_eq!(
             cache.insert(capacity + 1, capacity + 1).unwrap(),
             Eviction::Block { key: 2, value: 2 }
         );
 
-        assert_eq!(cache.remove(&(capacity + 1)).unwrap(), capacity + 1);
+        assert_eq!(
+            cache.remove(&(capacity + 1)).unwrap(),
+            Lookup::Hit(capacity + 1)
+        );
 
-        match cache.query(&(capacity + 1)) {
-            Err(LRUCacheError::CacheMiss) => {}
-            _ => unreachable!("Wrong error on cache miss"),
-        };
+        assert_eq!(cache.remove(&(capacity + 1)).unwrap(), Lookup::Miss);
+        assert_eq!(cache.query(&(capacity + 1)).unwrap(), Lookup::Miss);
 
         assert_eq!(
             cache.insert(capacity, capacity + 2).unwrap(),
