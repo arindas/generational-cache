@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Eviction"],"mod":["lru_cache"],"trait":["Cache"]};
+window.SIDEBAR_ITEMS = {"enum":["Eviction","Lookup"],"mod":["lru_cache"],"trait":["Cache"]};
