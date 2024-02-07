@@ -55,10 +55,16 @@ pub struct LinkedList<V, T> {
     len: usize,
 }
 
+/// Error type associated with list operations.
 #[derive(Debug)]
 pub enum ListError<VE> {
+    /// Used when there is an error in an operation performed on the underlying arena.
     ArenaError(ArenaError<VE>),
+
+    /// Used when a link is not associated with a node in the underlying arena.
     LinkBroken,
+
+    /// Used when attempting to remove items from an empty list.
     ListEmpty,
 }
 
@@ -71,6 +77,7 @@ where
     }
 }
 
+/// Type alias for arena entries corresponding to [`LinkedList`] [`Node`] instances.
 pub type LinkedListArenaEntry<T> = Entry<Node<T>>;
 
 impl<V, T> LinkedList<V, T>
@@ -304,6 +311,7 @@ where
     }
 }
 
+/// Iterator implementation to iterate over the items in a [`LinkedList`].
 pub struct Iter<'a, V, T> {
     list: &'a LinkedList<V, T>,
     cursor: Option<&'a Link>,

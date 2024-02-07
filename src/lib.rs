@@ -9,6 +9,10 @@ pub mod map;
 pub mod vector;
 
 pub mod prelude {
+    //! The `generational-cache` prelude.
+    //!
+    //! This module provides a set of commonly used items to alleviate imports.
+
     pub use super::{
         arena::{Arena, ArenaError},
         cache::{
