@@ -26,18 +26,26 @@ use core::{
     marker::PhantomData,
 };
 
-/// An generational counter augemented index to track entries.
+/// A generational counter augemented index to track arena allocation entries.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Index {
+    /// Generation counter.
     pub generation: u64,
+
+    /// Index to the [`Vector`] impl. instance underlying an [`Arena`].
     pub idx: usize,
 }
 
 /// An allocation entry in a generational arena.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Entry<T> {
+    /// An occupied entry containing an allocated value and the associated generation counter.
     Occupied { value: T, generation: u64 },
+
+    /// Free entry pointing to next free entry in the free list.
     Free { next_free_idx: Option<usize> },
+
+    /// An unmapped arena entry.
     Unmapped,
 }
 
@@ -86,10 +94,17 @@ pub struct Arena<V, T> {
     _phantom_type: PhantomData<T>,
 }
 
+/// Error type associated with arena operations.
 #[derive(Debug)]
 pub enum ArenaError<VE> {
+    /// Used on inserts on a maxed out [`Arena`] which is out of memory.
     OutOfMemory,
+
+    /// Used when referencing items in an [`Arena`] with an invalid [`Index`].
     InvalidIdx,
+
+    /// Used when there is an error in the underlying [`Vector`]
+    /// implemenation instance.
     VectorError(VE),
 }
 
@@ -107,6 +122,7 @@ impl<V, T> Arena<V, T>
 where
     V: Vector<Entry<T>>,
 {
+    /// Reserves space for the given number of additional items in this arena.
     pub fn reserve(&mut self, additional: usize) -> Result<(), ArenaError<V::Error>> {
         let reserve_start = self.entries_vec.len();
         let old_head = self.free_list_head;
@@ -137,6 +153,7 @@ where
         Ok(())
     }
 
+    /// Removes all items from this arena and reclaims all allocated memory.
     pub fn clear(&mut self) -> Result<(), ArenaError<V::Error>> {
         self.free_list_head = Some(0);
         self.generation = 0;
@@ -163,6 +180,8 @@ where
         Ok(())
     }
 
+    /// Creates an [`Arena`] instance with the given [`Vector`]
+    /// implemenation instance as the backing memory.
     pub fn with_vector(vector: V) -> Self {
         let capacity = vector.capacity();
 
@@ -180,6 +199,7 @@ where
         arena
     }
 
+    /// Allocates space for the given items and inserts it into this arena.
     pub fn insert(&mut self, item: T) -> Result<Index, ArenaError<V::Error>> {
         let old_free = self.free_list_head.ok_or(ArenaError::OutOfMemory)?;
 
@@ -211,6 +231,8 @@ where
         })
     }
 
+    /// Reclaims the allocated space for the item at the given index and
+    /// removes it from the arena.
     pub fn remove(&mut self, index: &Index) -> Option<T> {
         match self.entries_vec.get(index.idx) {
             Some(Entry::Occupied {

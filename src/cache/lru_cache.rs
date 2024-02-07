@@ -74,6 +74,8 @@ pub struct Block<K, T> {
 pub type LRUCacheBlockArenaEntry<K, T> = LinkedListArenaEntry<Block<K, T>>;
 
 /// A [generational-arena](crate::arena::Arena) powered LRUCache implementation.
+///
+/// This [`Cache`] implementation always evicts the least-recently-used (LRU) key/value pair.
 pub struct LRUCache<V, K, T, M> {
     block_list: LinkedList<V, Block<K, T>>,
     block_refs: M,
@@ -86,11 +88,13 @@ where
     V: Vector<LRUCacheBlockArenaEntry<K, T>>,
     M: Map<K, Link>,
 {
+    /// Returns the least recently used key/value pair.
     pub fn least_recent(&self) -> Option<(&K, &T)> {
         let block = self.block_list.peek_front()?;
         Some((&block.key, &block.value))
     }
 
+    /// Returns the most recently used key/value pair.
     pub fn most_recent(&self) -> Option<(&K, &T)> {
         let block = self.block_list.peek_back()?;
         Some((&block.key, &block.value))
@@ -102,6 +106,8 @@ where
     V: Vector<LRUCacheBlockArenaEntry<K, T>>,
     M: Map<K, Link>,
 {
+    /// Creates an [`LRUCache`] instance with the given backing [`Vector`] and [`Map`]
+    /// implementation instances.
     pub fn with_backing_vector_and_map(vector: V, map: M) -> Self {
         let block_list = LinkedList::with_backing_vector(vector);
         let capacity = block_list.capacity();
@@ -119,6 +125,8 @@ where
     V: Vector<LRUCacheBlockArenaEntry<K, T>>,
     M: Map<K, Link> + Default,
 {
+    /// Creates an [`LRUCache`] instance with the given [`Vector`] implementation instance
+    /// and the default [`Map`] implementation value.
     pub fn with_backing_vector(vector: V) -> Self {
         Self::with_backing_vector_and_map(vector, M::default())
     }
@@ -134,11 +142,20 @@ where
     }
 }
 
+/// Error type associated with [`LRUCache`] operations.
 #[derive(Debug)]
 pub enum LRUCacheError<VE, ME> {
+    /// Used when there is an error on an operation in the underlying list.
     ListError(ListError<VE>),
+
+    /// Used when attempting to remove elements from the underlying list when its empty.
     ListUnderflow,
+
+    /// Used when the underlying map and list instances contain an inconsistent view
+    /// of the entries allocated in the LRUCache
     MapListInconsistent,
+
+    /// Used when there is an error on an operation in the underlying map..
     MapError(ME),
 }
 
