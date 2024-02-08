@@ -77,27 +77,45 @@
 <a href="#77" id="77">77</a>
 <a href="#78" id="78">78</a>
 <a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Module providing abstractions to implement maps.
 
-/// An abstrct mapping from a set of keys to a set of values.
+/// An abstract mapping from a set of keys to a set of values.
 </span><span class="kw">pub trait </span>Map&lt;K, V&gt; {
-    <span class="kw">type </span>Error: core::fmt::Debug;
+    <span class="doccomment">/// Associated error type.
+    </span><span class="kw">type </span>Error: core::fmt::Debug;
 
-    <span class="kw">fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: K, value: V) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;V&gt;, <span class="self">Self</span>::Error&gt;;
+    <span class="doccomment">/// Inserts a new key/value pair into this map.
+    </span><span class="kw">fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: K, value: V) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;V&gt;, <span class="self">Self</span>::Error&gt;;
 
-    <span class="kw">fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>K) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>V&gt;;
+    <span class="doccomment">/// Returns an immutable reference to the value associated with the given key.
+    </span><span class="kw">fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>K) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>V&gt;;
 
-    <span class="kw">fn </span>get_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>K) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>V&gt;;
+    <span class="doccomment">/// Returns a mutable reference to the value associated with the given key.
+    </span><span class="kw">fn </span>get_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>K) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>V&gt;;
 
-    <span class="kw">fn </span>remove(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>K) -&gt; <span class="prelude-ty">Option</span>&lt;V&gt;;
+    <span class="doccomment">/// Removes the key/value pair associated with the given key from this map.
+    </span><span class="kw">fn </span>remove(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>K) -&gt; <span class="prelude-ty">Option</span>&lt;V&gt;;
 
-    <span class="kw">fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;;
+    <span class="doccomment">/// Removes all key/value pairs stored in this map.
+    </span><span class="kw">fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;;
 
-    <span class="kw">fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool;
+    <span class="doccomment">/// Returns whether this map is empty.
+    </span><span class="kw">fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool;
 
-    <span class="kw">fn </span>capacity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt;;
+    <span class="doccomment">/// Returns the number of key/value pairs this map is capable of storing.
+    </span><span class="kw">fn </span>capacity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt;;
 
-    <span class="kw">fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize;
+    <span class="doccomment">/// Rethrns the number of key/value pairs currently stored in this map.
+    </span><span class="kw">fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize;
 }
 
 <span class="kw">pub mod </span>impls;

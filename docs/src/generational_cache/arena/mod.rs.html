@@ -559,6 +559,11 @@
 <a href="#559" id="559">559</a>
 <a href="#560" id="560">560</a>
 <a href="#561" id="561">561</a>
+<a href="#562" id="562">562</a>
+<a href="#563" id="563">563</a>
+<a href="#564" id="564">564</a>
+<a href="#565" id="565">565</a>
+<a href="#566" id="566">566</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Module providing abstractions for a generational arena implemenation.
 //!
 //! ## Usage
@@ -826,7 +831,8 @@
         })
     }
 
-    <span class="kw">pub fn </span>get_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: <span class="kw-2">&amp;</span>Index) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>T&gt; {
+    <span class="doccomment">/// Returns a mutable reference to the allocated items referenced by the given [`Index`].
+    </span><span class="kw">pub fn </span>get_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: <span class="kw-2">&amp;</span>Index) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>T&gt; {
         <span class="kw">match </span><span class="self">self</span>.entries_vec.get_mut(index.idx) {
             <span class="prelude-val">Some</span>(Entry::Occupied { value, generation }) <span class="kw">if </span><span class="kw-2">&amp;</span>index.generation == generation =&gt; {
                 <span class="prelude-val">Some</span>(value)
@@ -835,7 +841,8 @@
         }
     }
 
-    <span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, index: <span class="kw-2">&amp;</span>Index) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>T&gt; {
+    <span class="doccomment">/// Returns an immutable reference to the allocated items referenced by the given [`Index`].
+    </span><span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, index: <span class="kw-2">&amp;</span>Index) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>T&gt; {
         <span class="kw">match </span><span class="self">self</span>.entries_vec.get(index.idx) {
             <span class="prelude-val">Some</span>(Entry::Occupied { value, generation }) <span class="kw">if </span><span class="kw-2">&amp;</span>index.generation == generation =&gt; {
                 <span class="prelude-val">Some</span>(value)
@@ -844,15 +851,18 @@
         }
     }
 
-    <span class="kw">pub fn </span>capacity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+    <span class="doccomment">/// Returns the number of elements this [`Arena`] is capable of allocating.
+    </span><span class="kw">pub fn </span>capacity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         <span class="self">self</span>.capacity
     }
 
-    <span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+    <span class="doccomment">/// Returns whether this [`Arena`] is empty.
+    </span><span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.len == <span class="number">0
     </span>}
 
-    <span class="kw">pub fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+    <span class="doccomment">/// Returns the number of elements allocated in this [`Arena`].
+    </span><span class="kw">pub fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         <span class="self">self</span>.len
     }
 }

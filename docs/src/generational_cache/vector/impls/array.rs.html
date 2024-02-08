@@ -86,6 +86,10 @@
 <a href="#86" id="86">86</a>
 <a href="#87" id="87">87</a>
 <a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Module provinding a vector implementation based on arrays.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::vector::Vector;
@@ -94,14 +98,15 @@
     ops::{Deref, DerefMut},
 };
 
-<span class="doccomment">/// Implements [Vector] with `[T; N]`.
+<span class="doccomment">/// Implements [`Vector`] with `[T; N]`.
 </span><span class="kw">pub struct </span>Array&lt;T, <span class="kw">const </span>N: usize&gt; {
     buffer: [T; N],
     len: usize,
 }
 
 <span class="kw">impl</span>&lt;T, <span class="kw">const </span>N: usize&gt; Array&lt;T, N&gt; {
-    <span class="kw">pub fn </span>with_buffer(buffer: [T; N]) -&gt; <span class="self">Self </span>{
+    <span class="doccomment">/// Creates an [`Array`] with the given buffer.
+    </span><span class="kw">pub fn </span>with_buffer(buffer: [T; N]) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ buffer, len: <span class="number">0 </span>}
     }
 }
@@ -110,7 +115,8 @@
 <span class="kw">where
     </span>T: Copy + Default,
 {
-    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+    <span class="doccomment">/// Creates a new [`Array`].
+    </span><span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::with_buffer([Default::default(); N])
     }
 }
@@ -138,9 +144,11 @@
     }
 }
 
-<span class="attr">#[derive(PartialEq, Debug)]
+<span class="doccomment">/// Error assocaited with operations on [`Array`]
+</span><span class="attr">#[derive(PartialEq, Debug)]
 </span><span class="kw">pub enum </span>ArrayError {
-    OutOfMemory,
+    <span class="doccomment">/// Used when attempting to push en element into an [`Array`] when it&#39;s at capacity.
+    </span>OutOfMemory,
 }
 
 <span class="kw">impl</span>&lt;T, <span class="kw">const </span>N: usize&gt; Vector&lt;T&gt; <span class="kw">for </span>Array&lt;T, N&gt; {

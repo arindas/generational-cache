@@ -603,6 +603,29 @@
 <a href="#603" id="603">603</a>
 <a href="#604" id="604">604</a>
 <a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
+<a href="#627" id="627">627</a>
+<a href="#628" id="628">628</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Module providing abstractions for a linked list implementation.
 
 </span><span class="kw">use </span>core::fmt::{<span class="self">self</span>, Debug, Display};
@@ -650,7 +673,7 @@
     }
 }
 
-<span class="doccomment">/// A double-linked linked list implementation powered by a [generational arena](Arena).
+<span class="doccomment">/// A double-linked linked list implementation using a generational [`Arena`] for allocation.
 </span><span class="kw">pub struct </span>LinkedList&lt;V, T&gt; {
     backing_arena: Arena&lt;V, Node&lt;T&gt;&gt;,
 
@@ -689,7 +712,8 @@
 <span class="kw">where
     </span>V: Vector&lt;Entry&lt;Node&lt;T&gt;&gt;&gt;,
 {
-    <span class="kw">pub fn </span>with_backing_vector(vector: V) -&gt; <span class="self">Self </span>{
+    <span class="doccomment">/// Creates a new [`LinkedList`] with given the backing [`Vector`] for the underlying [`Arena`].
+    </span><span class="kw">pub fn </span>with_backing_vector(vector: V) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             backing_arena: Arena::with_vector(vector),
             head: <span class="prelude-val">None</span>,
@@ -698,7 +722,8 @@
         }
     }
 
-    <span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), ListError&lt;V::Error&gt;&gt; {
+    <span class="doccomment">/// Removes all elements from this [`LinkedList`].
+    </span><span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), ListError&lt;V::Error&gt;&gt; {
         <span class="self">self</span>.backing_arena.clear().map_err(ListError::ArenaError)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.head = <span class="prelude-val">None</span>;
@@ -708,7 +733,8 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub fn </span>reserve(<span class="kw-2">&amp;mut </span><span class="self">self</span>, additional: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), ListError&lt;V::Error&gt;&gt; {
+    <span class="doccomment">/// Reserves memory for the give number of additional elements in this [`LinkedList`].
+    </span><span class="kw">pub fn </span>reserve(<span class="kw-2">&amp;mut </span><span class="self">self</span>, additional: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), ListError&lt;V::Error&gt;&gt; {
         <span class="kw">let </span>remaining = <span class="self">self</span>.capacity() - <span class="self">self</span>.len();
 
         <span class="kw">if </span>remaining &gt;= additional {
@@ -720,31 +746,41 @@
             .map_err(ListError::ArenaError)
     }
 
-    <span class="kw">pub fn </span>capacity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+    <span class="doccomment">/// Returns the number of elements this [`LinkedList`] is capable of storing.
+    ///
+    /// Since this [`LinkedList`] uses an [`Arena`] for allocation, it&#39;s capacity is subject to the
+    /// capacity of the underlying [`Arena`].
+    </span><span class="kw">pub fn </span>capacity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         <span class="self">self</span>.backing_arena.capacity()
     }
 
-    <span class="kw">pub fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+    <span class="doccomment">/// Returns the number of elements stored in this [`LinkedList`].
+    </span><span class="kw">pub fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         <span class="self">self</span>.len
     }
 
-    <span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+    <span class="doccomment">/// Returns whether this [`LinkedList`] is empty.
+    </span><span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.head.is_none()
     }
 
-    <span class="kw">fn </span>get_node_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, link: <span class="kw-2">&amp;</span>Link) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>Node&lt;T&gt;&gt; {
+    <span class="doccomment">/// Returns a mutable reference to the [`Node`] referenced by the given [`Link`].
+    </span><span class="kw">fn </span>get_node_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, link: <span class="kw-2">&amp;</span>Link) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>Node&lt;T&gt;&gt; {
         <span class="self">self</span>.backing_arena.get_mut(<span class="kw-2">&amp;</span>link.index)
     }
 
-    <span class="kw">fn </span>get_node(<span class="kw-2">&amp;</span><span class="self">self</span>, link: <span class="kw-2">&amp;</span>Link) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Node&lt;T&gt;&gt; {
+    <span class="doccomment">/// Returns an immutable reference to the [`Node`] referenced by the given [`Link`].
+    </span><span class="kw">fn </span>get_node(<span class="kw-2">&amp;</span><span class="self">self</span>, link: <span class="kw-2">&amp;</span>Link) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Node&lt;T&gt;&gt; {
         <span class="self">self</span>.backing_arena.get(<span class="kw-2">&amp;</span>link.index)
     }
 
-    <span class="kw">pub fn </span>get_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, link: <span class="kw-2">&amp;</span>Link) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>T&gt; {
+    <span class="doccomment">/// Returns a mutable reference to the element stored in the [`Node`] at the given [`Link`].
+    </span><span class="kw">pub fn </span>get_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, link: <span class="kw-2">&amp;</span>Link) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>T&gt; {
         <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>.get_node_mut(link)<span class="question-mark">?</span>.value)
     }
 
-    <span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, link: <span class="kw-2">&amp;</span>Link) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>T&gt; {
+    <span class="doccomment">/// Returns an imutable reference to the element stored in the [`Node`] at the given [`Link`].
+    </span><span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, link: <span class="kw-2">&amp;</span>Link) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>T&gt; {
         <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.get_node(link)<span class="question-mark">?</span>.value)
     }
 
@@ -780,7 +816,8 @@
         <span class="prelude-val">Some</span>(())
     }
 
-    <span class="kw">pub fn </span>push_front(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: T) -&gt; <span class="prelude-ty">Result</span>&lt;Link, ListError&lt;V::Error&gt;&gt; {
+    <span class="doccomment">/// Pushes the given element to the front of this [`LinkedList`].
+    </span><span class="kw">pub fn </span>push_front(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: T) -&gt; <span class="prelude-ty">Result</span>&lt;Link, ListError&lt;V::Error&gt;&gt; {
         <span class="kw">let </span>node_index = <span class="self">self
             </span>.backing_arena
             .insert(Node::with_value(value))
@@ -793,7 +830,8 @@
         <span class="prelude-val">Ok</span>(node_link)
     }
 
-    <span class="kw">pub fn </span>push_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: T) -&gt; <span class="prelude-ty">Result</span>&lt;Link, ListError&lt;V::Error&gt;&gt; {
+    <span class="doccomment">/// Pushes the given element to the back of this [`LinkedList`].
+    </span><span class="kw">pub fn </span>push_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: T) -&gt; <span class="prelude-ty">Result</span>&lt;Link, ListError&lt;V::Error&gt;&gt; {
         <span class="kw">let </span>node_index = <span class="self">self
             </span>.backing_arena
             .insert(Node::with_value(value))
@@ -806,11 +844,13 @@
         <span class="prelude-val">Ok</span>(node_link)
     }
 
-    <span class="kw">pub fn </span>peek_front(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>T&gt; {
+    <span class="doccomment">/// Peeks the element at the front of this list.
+    </span><span class="kw">pub fn </span>peek_front(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>T&gt; {
         <span class="self">self</span>.get(<span class="self">self</span>.head.as_ref()<span class="question-mark">?</span>)
     }
 
-    <span class="kw">pub fn </span>peek_back(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>T&gt; {
+    <span class="doccomment">/// Peeks the element at the back of this list.
+    </span><span class="kw">pub fn </span>peek_back(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>T&gt; {
         <span class="self">self</span>.get(<span class="self">self</span>.tail.as_ref()<span class="question-mark">?</span>)
     }
 
@@ -846,7 +886,7 @@
         <span class="prelude-val">Some</span>(tail_link)
     }
 
-    <span class="kw">pub fn </span>unlink(<span class="kw-2">&amp;mut </span><span class="self">self</span>, link: <span class="kw-2">&amp;</span>Link) -&gt; <span class="prelude-ty">Option</span>&lt;Link&gt; {
+    <span class="kw">fn </span>unlink(<span class="kw-2">&amp;mut </span><span class="self">self</span>, link: <span class="kw-2">&amp;</span>Link) -&gt; <span class="prelude-ty">Option</span>&lt;Link&gt; {
         <span class="kw">match </span><span class="prelude-val">Some</span>(link) {
             link <span class="kw">if </span>link == <span class="self">self</span>.head.as_ref() =&gt; <span class="self">self</span>.unlink_head(),
             link <span class="kw">if </span>link == <span class="self">self</span>.tail.as_ref() =&gt; <span class="self">self</span>.unlink_tail(),
@@ -874,32 +914,38 @@
         <span class="prelude-val">Some</span>(node.value)
     }
 
-    <span class="kw">pub fn </span>remove(<span class="kw-2">&amp;mut </span><span class="self">self</span>, link: <span class="kw-2">&amp;</span>Link) -&gt; <span class="prelude-ty">Option</span>&lt;T&gt; {
+    <span class="doccomment">/// Removes the element referenced by the given link.
+    </span><span class="kw">pub fn </span>remove(<span class="kw-2">&amp;mut </span><span class="self">self</span>, link: <span class="kw-2">&amp;</span>Link) -&gt; <span class="prelude-ty">Option</span>&lt;T&gt; {
         <span class="kw">let </span>link = <span class="self">self</span>.unlink(link)<span class="question-mark">?</span>;
         <span class="self">self</span>.reclaim(<span class="kw-2">&amp;</span>link)
     }
 
-    <span class="kw">pub fn </span>pop_front(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;T&gt; {
+    <span class="doccomment">/// Removes the element at the front of this list.
+    </span><span class="kw">pub fn </span>pop_front(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;T&gt; {
         <span class="kw">let </span>link = <span class="self">self</span>.unlink_head()<span class="question-mark">?</span>;
         <span class="self">self</span>.reclaim(<span class="kw-2">&amp;</span>link)
     }
 
-    <span class="kw">pub fn </span>pop_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;T&gt; {
+    <span class="doccomment">/// Removes the element at the back of this list.
+    </span><span class="kw">pub fn </span>pop_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;T&gt; {
         <span class="kw">let </span>link = <span class="self">self</span>.unlink_tail()<span class="question-mark">?</span>;
         <span class="self">self</span>.reclaim(<span class="kw-2">&amp;</span>link)
     }
 
-    <span class="kw">pub fn </span>shift_push_front(<span class="kw-2">&amp;mut </span><span class="self">self</span>, link: <span class="kw-2">&amp;</span>Link) -&gt; <span class="prelude-ty">Option</span>&lt;()&gt; {
+    <span class="doccomment">/// Shifts the element at the given [`Link`] to the front of this list.
+    </span><span class="kw">pub fn </span>shift_push_front(<span class="kw-2">&amp;mut </span><span class="self">self</span>, link: <span class="kw-2">&amp;</span>Link) -&gt; <span class="prelude-ty">Option</span>&lt;()&gt; {
         <span class="kw">let </span>link = <span class="self">self</span>.unlink(link)<span class="question-mark">?</span>;
         <span class="self">self</span>.link_head(link)
     }
 
-    <span class="kw">pub fn </span>shift_push_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>, link: <span class="kw-2">&amp;</span>Link) -&gt; <span class="prelude-ty">Option</span>&lt;()&gt; {
+    <span class="doccomment">/// Shifts the element at the given [`Link`] to the back of this list.
+    </span><span class="kw">pub fn </span>shift_push_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>, link: <span class="kw-2">&amp;</span>Link) -&gt; <span class="prelude-ty">Option</span>&lt;()&gt; {
         <span class="kw">let </span>link = <span class="self">self</span>.unlink(link)<span class="question-mark">?</span>;
         <span class="self">self</span>.link_tail(link)
     }
 
-    <span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Iter&lt;<span class="lifetime">&#39;_</span>, V, T&gt; {
+    <span class="doccomment">/// Returns an iterator to iterate over the elements in this list.
+    </span><span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Iter&lt;<span class="lifetime">&#39;_</span>, V, T&gt; {
         Iter {
             list: <span class="self">self</span>,
             cursor: <span class="self">self</span>.head.as_ref(),

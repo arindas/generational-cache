@@ -67,7 +67,9 @@
 <a href="#67" id="67">67</a>
 <a href="#68" id="68">68</a>
 <a href="#69" id="69">69</a>
-</pre></div><pre class="rust"><code><span class="doccomment">//! Module providing a vector implementation based on [alloc::vec::Vec].
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+</pre></div><pre class="rust"><code><span class="doccomment">//! Module providing a vector implementation based on [`alloc::vec::Vec`].
 
 </span><span class="kw">extern crate </span>alloc;
 
@@ -78,7 +80,7 @@
     ops::{Deref, DerefMut},
 };
 
-<span class="doccomment">/// Implements [Vector] with [alloc::vec::Vec].
+<span class="doccomment">/// Implements [`Vector`] with [`alloc::vec::Vec`].
 </span><span class="kw">pub struct </span>AllocVec&lt;T&gt; {
     vec: Vec&lt;T&gt;,
 }
@@ -90,11 +92,13 @@
 }
 
 <span class="kw">impl</span>&lt;T&gt; AllocVec&lt;T&gt; {
-    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+    <span class="doccomment">/// Creates a new empty [`AllocVec`] instance.
+    </span><span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ vec: Vec::new() }
     }
 
-    <span class="kw">pub fn </span>with_capacity(capacity: usize) -&gt; <span class="self">Self </span>{
+    <span class="doccomment">/// Creates a new [`AllocVec`] with the given capacity.
+    </span><span class="kw">pub fn </span>with_capacity(capacity: usize) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             vec: Vec::with_capacity(capacity),
         }

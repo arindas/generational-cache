@@ -65,14 +65,16 @@
 <a href="#65" id="65">65</a>
 <a href="#66" id="66">66</a>
 <a href="#67" id="67">67</a>
-</pre></div><pre class="rust"><code><span class="doccomment">//! Module providing a map implementation based on [alloc::collections::BTreeMap].
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+</pre></div><pre class="rust"><code><span class="doccomment">//! Module providing a map implementation based on [`alloc::collections::BTreeMap`].
 
 </span><span class="kw">extern crate </span>alloc;
 
 <span class="kw">use </span><span class="kw">crate</span>::map::Map;
 <span class="kw">use </span>alloc::collections::BTreeMap;
 
-<span class="doccomment">/// A [Map] implementation based on [alloc::collections::BTreeMap].
+<span class="doccomment">/// A [`Map`] implementation based on [`alloc::collections::BTreeMap`].
 </span><span class="kw">pub struct </span>AllocBTreeMap&lt;K, V&gt; {
     btree_map: BTreeMap&lt;K, V&gt;,
 }
@@ -84,11 +86,13 @@
 }
 
 <span class="kw">impl</span>&lt;K, V&gt; AllocBTreeMap&lt;K, V&gt; {
-    <span class="kw">pub fn </span>with_btree_map(btree_map: BTreeMap&lt;K, V&gt;) -&gt; <span class="self">Self </span>{
+    <span class="doccomment">/// Creates a new [`AllocBTreeMap`] with the given [`BTreeMap`].
+    </span><span class="kw">pub fn </span>with_btree_map(btree_map: BTreeMap&lt;K, V&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ btree_map }
     }
 
-    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+    <span class="doccomment">/// Creates a new empty [`AllocBTreeMap`].
+    </span><span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             btree_map: BTreeMap::new(),
         }
