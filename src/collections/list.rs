@@ -45,7 +45,7 @@ where
     }
 }
 
-/// A double-linked linked list implementation powered by a [generational arena](Arena).
+/// A double-linked linked list implementation using a generational [`Arena`] for allocation.
 pub struct LinkedList<V, T> {
     backing_arena: Arena<V, Node<T>>,
 
@@ -84,6 +84,7 @@ impl<V, T> LinkedList<V, T>
 where
     V: Vector<Entry<Node<T>>>,
 {
+    /// Creates a new [`LinkedList`] with given the backing [`Vector`] for the underlying [`Arena`].
     pub fn with_backing_vector(vector: V) -> Self {
         Self {
             backing_arena: Arena::with_vector(vector),
@@ -93,6 +94,7 @@ where
         }
     }
 
+    /// Removes all elements from this [`LinkedList`].
     pub fn clear(&mut self) -> Result<(), ListError<V::Error>> {
         self.backing_arena.clear().map_err(ListError::ArenaError)?;
 
@@ -103,6 +105,7 @@ where
         Ok(())
     }
 
+    /// Reserves memory for the give number of additional elements in this [`LinkedList`].
     pub fn reserve(&mut self, additional: usize) -> Result<(), ListError<V::Error>> {
         let remaining = self.capacity() - self.len();
 
@@ -115,30 +118,40 @@ where
             .map_err(ListError::ArenaError)
     }
 
+    /// Returns the number of elements this [`LinkedList`] is capable of storing.
+    ///
+    /// Since this [`LinkedList`] uses an [`Arena`] for allocation, it's capacity is subject to the
+    /// capacity of the underlying [`Arena`].
     pub fn capacity(&self) -> usize {
         self.backing_arena.capacity()
     }
 
+    /// Returns the number of elements stored in this [`LinkedList`].
     pub fn len(&self) -> usize {
         self.len
     }
 
+    /// Returns whether this [`LinkedList`] is empty.
     pub fn is_empty(&self) -> bool {
         self.head.is_none()
     }
 
+    /// Returns a mutable reference to the [`Node`] referenced by the given [`Link`].
     fn get_node_mut(&mut self, link: &Link) -> Option<&mut Node<T>> {
         self.backing_arena.get_mut(&link.index)
     }
 
+    /// Returns an immutable reference to the [`Node`] referenced by the given [`Link`].
     fn get_node(&self, link: &Link) -> Option<&Node<T>> {
         self.backing_arena.get(&link.index)
     }
 
+    /// Returns a mutable reference to the element stored in the [`Node`] at the given [`Link`].
     pub fn get_mut(&mut self, link: &Link) -> Option<&mut T> {
         Some(&mut self.get_node_mut(link)?.value)
     }
 
+    /// Returns an imutable reference to the element stored in the [`Node`] at the given [`Link`].
     pub fn get(&self, link: &Link) -> Option<&T> {
         Some(&self.get_node(link)?.value)
     }
@@ -175,6 +188,7 @@ where
         Some(())
     }
 
+    /// Pushes the given element to the front of this [`LinkedList`].
     pub fn push_front(&mut self, value: T) -> Result<Link, ListError<V::Error>> {
         let node_index = self
             .backing_arena
@@ -188,6 +202,7 @@ where
         Ok(node_link)
     }
 
+    /// Pushes the given element to the back of this [`LinkedList`].
     pub fn push_back(&mut self, value: T) -> Result<Link, ListError<V::Error>> {
         let node_index = self
             .backing_arena
@@ -201,10 +216,12 @@ where
         Ok(node_link)
     }
 
+    /// Peeks the element at the front of this list.
     pub fn peek_front(&self) -> Option<&T> {
         self.get(self.head.as_ref()?)
     }
 
+    /// Peeks the element at the back of this list.
     pub fn peek_back(&self) -> Option<&T> {
         self.get(self.tail.as_ref()?)
     }
@@ -241,7 +258,7 @@ where
         Some(tail_link)
     }
 
-    pub fn unlink(&mut self, link: &Link) -> Option<Link> {
+    fn unlink(&mut self, link: &Link) -> Option<Link> {
         match Some(link) {
             link if link == self.head.as_ref() => self.unlink_head(),
             link if link == self.tail.as_ref() => self.unlink_tail(),
@@ -269,31 +286,37 @@ where
         Some(node.value)
     }
 
+    /// Removes the element referenced by the given link.
     pub fn remove(&mut self, link: &Link) -> Option<T> {
         let link = self.unlink(link)?;
         self.reclaim(&link)
     }
 
+    /// Removes the element at the front of this list.
     pub fn pop_front(&mut self) -> Option<T> {
         let link = self.unlink_head()?;
         self.reclaim(&link)
     }
 
+    /// Removes the element at the back of this list.
     pub fn pop_back(&mut self) -> Option<T> {
         let link = self.unlink_tail()?;
         self.reclaim(&link)
     }
 
+    /// Shifts the element at the given [`Link`] to the front of this list.
     pub fn shift_push_front(&mut self, link: &Link) -> Option<()> {
         let link = self.unlink(link)?;
         self.link_head(link)
     }
 
+    /// Shifts the element at the given [`Link`] to the back of this list.
     pub fn shift_push_back(&mut self, link: &Link) -> Option<()> {
         let link = self.unlink(link)?;
         self.link_tail(link)
     }
 
+    /// Returns an iterator to iterate over the elements in this list.
     pub fn iter(&self) -> Iter<'_, V, T> {
         Iter {
             list: self,

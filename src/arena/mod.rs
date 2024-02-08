@@ -265,6 +265,7 @@ where
         })
     }
 
+    /// Returns a mutable reference to the allocated items referenced by the given [`Index`].
     pub fn get_mut(&mut self, index: &Index) -> Option<&mut T> {
         match self.entries_vec.get_mut(index.idx) {
             Some(Entry::Occupied { value, generation }) if &index.generation == generation => {
@@ -274,6 +275,7 @@ where
         }
     }
 
+    /// Returns an immutable reference to the allocated items referenced by the given [`Index`].
     pub fn get(&self, index: &Index) -> Option<&T> {
         match self.entries_vec.get(index.idx) {
             Some(Entry::Occupied { value, generation }) if &index.generation == generation => {
@@ -283,14 +285,17 @@ where
         }
     }
 
+    /// Returns the number of elements this [`Arena`] is capable of allocating.
     pub fn capacity(&self) -> usize {
         self.capacity
     }
 
+    /// Returns whether this [`Arena`] is empty.
     pub fn is_empty(&self) -> bool {
         self.len == 0
     }
 
+    /// Returns the number of elements allocated in this [`Arena`].
     pub fn len(&self) -> usize {
         self.len
     }

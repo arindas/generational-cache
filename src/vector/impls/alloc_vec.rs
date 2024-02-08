@@ -1,4 +1,4 @@
-//! Module providing a vector implementation based on [alloc::vec::Vec].
+//! Module providing a vector implementation based on [`alloc::vec::Vec`].
 
 extern crate alloc;
 
@@ -9,7 +9,7 @@ use core::{
     ops::{Deref, DerefMut},
 };
 
-/// Implements [Vector] with [alloc::vec::Vec].
+/// Implements [`Vector`] with [`alloc::vec::Vec`].
 pub struct AllocVec<T> {
     vec: Vec<T>,
 }
@@ -21,10 +21,12 @@ impl<T> Default for AllocVec<T> {
 }
 
 impl<T> AllocVec<T> {
+    /// Creates a new empty [`AllocVec`] instance.
     pub fn new() -> Self {
         Self { vec: Vec::new() }
     }
 
+    /// Creates a new [`AllocVec`] with the given capacity.
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
             vec: Vec::with_capacity(capacity),

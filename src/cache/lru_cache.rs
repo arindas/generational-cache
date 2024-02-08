@@ -73,9 +73,26 @@ pub struct Block<K, T> {
 /// Alias representing block entries for storage in a generational arena.
 pub type LRUCacheBlockArenaEntry<K, T> = LinkedListArenaEntry<Block<K, T>>;
 
-/// A [generational-arena](crate::arena::Arena) powered LRUCache implementation.
+/// A generational [`Arena`](crate::arena::Arena) backed LRU cache implementation.
 ///
-/// This [`Cache`] implementation always evicts the least-recently-used (LRU) key/value pair.
+/// This [`Cache`] implementation always evicts the least-recently-used (LRU) key/value pair. It
+/// uses a [`LinkedList`] for storing the underlying cache block entries to maintain the order
+/// in which they were inserted into the cache.
+///
+/// It uses a generational [`Arena`](crate::arena::Arena) for allocating the underlying
+/// [`LinkedList`] which stores the cache blocks. It uses a [`Map`] for maintaining the mapping
+/// from keys to the nodes storing the respective cache blocks in the [`LinkedList`].
+///
+/// ### Type parameters
+/// - `V: Vector<LRUCacheBlockArenaEntry<K, T>>`
+///     Used as the backing vector for the underlying [`Arena`](crate::arena::Arena).
+/// - `K`
+///     The Key type.
+/// - `V`
+///     The Value type.
+/// - `M: Map<K, Link>`
+///     Used to store a mapping from the keys to links in the linked list.
+///
 pub struct LRUCache<V, K, T, M> {
     block_list: LinkedList<V, Block<K, T>>,
     block_refs: M,
@@ -106,7 +123,7 @@ where
     V: Vector<LRUCacheBlockArenaEntry<K, T>>,
     M: Map<K, Link>,
 {
-    /// Creates an [`LRUCache`] instance with the given backing [`Vector`] and [`Map`]
+    /// Creates an [`LRUCache`] instance with the given the backing [`Vector`] and [`Map`]
     /// implementation instances.
     pub fn with_backing_vector_and_map(vector: V, map: M) -> Self {
         let block_list = LinkedList::with_backing_vector(vector);
