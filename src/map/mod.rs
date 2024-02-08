@@ -1,23 +1,32 @@
 //! Module providing abstractions to implement maps.
 
-/// An abstrct mapping from a set of keys to a set of values.
+/// An abstract mapping from a set of keys to a set of values.
 pub trait Map<K, V> {
+    /// Associated error type.
     type Error: core::fmt::Debug;
 
+    /// Inserts a new key/value pair into this map.
     fn insert(&mut self, key: K, value: V) -> Result<Option<V>, Self::Error>;
 
+    /// Returns an immutable reference to the value associated with the given key.
     fn get(&self, key: &K) -> Option<&V>;
 
+    /// Returns a mutable reference to the value associated with the given key.
     fn get_mut(&mut self, key: &K) -> Option<&mut V>;
 
+    /// Removes the key/value pair associated with the given key from this map.
     fn remove(&mut self, key: &K) -> Option<V>;
 
+    /// Removes all key/value pairs stored in this map.
     fn clear(&mut self) -> Result<(), Self::Error>;
 
+    /// Returns whether this map is empty.
     fn is_empty(&self) -> bool;
 
+    /// Returns the number of key/value pairs this map is capable of storing.
     fn capacity(&self) -> Option<usize>;
 
+    /// Rethrns the number of key/value pairs currently stored in this map.
     fn len(&self) -> usize;
 }
 

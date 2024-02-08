@@ -6,13 +6,14 @@ use core::{
     ops::{Deref, DerefMut},
 };
 
-/// Implements [Vector] with `[T; N]`.
+/// Implements [`Vector`] with `[T; N]`.
 pub struct Array<T, const N: usize> {
     buffer: [T; N],
     len: usize,
 }
 
 impl<T, const N: usize> Array<T, N> {
+    /// Creates an [`Array`] with the given buffer.
     pub fn with_buffer(buffer: [T; N]) -> Self {
         Self { buffer, len: 0 }
     }
@@ -22,6 +23,7 @@ impl<T, const N: usize> Array<T, N>
 where
     T: Copy + Default,
 {
+    /// Creates a new [`Array`].
     pub fn new() -> Self {
         Self::with_buffer([Default::default(); N])
     }
@@ -50,8 +52,10 @@ impl<T, const N: usize> Deref for Array<T, N> {
     }
 }
 
+/// Error assocaited with operations on [`Array`]
 #[derive(PartialEq, Debug)]
 pub enum ArrayError {
+    /// Used when attempting to push en element into an [`Array`] when it's at capacity.
     OutOfMemory,
 }
 

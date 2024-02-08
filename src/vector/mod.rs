@@ -6,12 +6,16 @@ use core::ops::DerefMut;
 pub trait Vector<T>: DerefMut<Target = [T]> {
     type Error: core::fmt::Debug;
 
+    /// Reserves memory for the given number of additional items in this vector.
     fn reserve(&mut self, additional: usize) -> Result<(), Self::Error>;
 
+    /// Returns the number of items this vector is capable of storing.
     fn capacity(&self) -> usize;
 
+    /// Pushes a new element to the end of this vector.
     fn push(&mut self, item: T) -> Result<(), Self::Error>;
 
+    /// Removes all elements from this vector.
     fn clear(&mut self);
 }
 
